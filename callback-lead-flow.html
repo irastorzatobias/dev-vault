@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Callback — Flujo del Lead & Día del Supervisor</title>
+<style>
+:root {
+  --bg: #080808;
+  --surface: #0f0f0f;
+  --surface2: #141414;
+  --border: #1a1a1a;
+  --border2: #242424;
+  --text: #c8c8c8;
+  --dim: #4a4a4a;
+  --dimmer: #2a2a2a;
+
+  --digital:   #3b7dd8;
+  --analogico: #b07d2a;
+  --pending:   #4a4a4a;
+  --waiting:   #1a7a8a;
+  --dialing:   #3b7dd8;
+  --done:      #2d9e5f;
+  --supervisor:#8a5fc0;
+  --schedule:  #2d9e5f;
+  --automation:#c0392b;
+  --note:      #8a7022;
+
+  --mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 40px 32px 100px;
+}
+
+.wrap { max-width: 1020px; margin: 0 auto; }
+
+/* ── HEADER ── */
+.hdr {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 28px;
+}
+.hdr h1 { font-size: 12px; font-weight: 600; color: #e0e0e0; letter-spacing: .08em; text-transform: uppercase; }
+.hdr p  { font-size: 10px; color: var(--dim); }
+.hdr .companion { margin-left: auto; font-size: 9px; color: var(--dim); }
+.hdr .companion a { color: #5a9de8; text-decoration: none; }
+
+/* ── SECTION ── */
+.section { margin-bottom: 40px; }
+.section-title {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--dim);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title .idx { color: #5a9de8; font-weight: 700; }
+.section-sub { font-size: 10px; color: var(--dim); margin: -8px 0 16px; max-width: 760px; }
+
+/* ── ACLARACIONES BOX ── */
+.notes {
+  background: #100d04;
+  border: 1px solid #2a2210;
+  border-left: 3px solid var(--note);
+  padding: 16px 18px;
+  margin-bottom: 36px;
+}
+.notes h2 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: #c0a030;
+  margin-bottom: 12px;
+}
+.notes .confirmed { color: #4dbf7f; }
+.notes .open { color: #e0b84d; }
+.note-item {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid #1c1809;
+  font-size: 10px;
+  align-items: start;
+}
+.note-item:last-child { border-bottom: none; }
+.note-item .mark { font-size: 11px; line-height: 1.5; }
+.note-item .body { color: #b8a878; }
+.note-item .body b { color: #d8c890; font-weight: 600; }
+.note-item .body code {
+  color: #7ab3f0;
+  background: #0c0c0c;
+  padding: 0 3px;
+  border: 1px solid var(--border2);
+  font-size: 9px;
+}
+.notes .sub-h {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--dim);
+  margin: 16px 0 6px;
+}
+
+/* ── ORIGINS ── */
+.origins-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.origin-card { background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; }
+.origin-card.digital   { border-top: 2px solid var(--digital); }
+.origin-card.analogico { border-top: 2px solid var(--analogico); }
+.origin-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.origin-head .name { font-weight: 600; font-size: 12px; }
+.origin-card.digital   .origin-head .name { color: #7ab3f0; }
+.origin-card.analogico .origin-head .name { color: #d8a850; }
+.origin-head .tag { font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; margin-left: auto; }
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.source-row:last-child { border-bottom: none; }
+.source-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.digital   .source-dot { background: var(--digital); }
+.analogico .source-dot { background: var(--analogico); }
+.source-name { color: var(--text); font-size: 11px; min-width: 150px; }
+.source-desc { color: var(--dim); font-size: 9px; }
+
+/* ── ACTORS ── */
+.actors-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.actor-card { background: var(--surface); border: 1px solid var(--border); padding: 12px 13px; }
+.actor-card .a-name { font-weight: 600; font-size: 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.actor-card .a-tag { font-size: 8px; padding: 1px 5px; border: 1px solid; letter-spacing: .05em; text-transform: uppercase; }
+.tag-sup   { color: #b18fe0; border-color: var(--supervisor); }
+.tag-sched { color: #4dbf7f; border-color: var(--schedule); }
+.tag-auto  { color: #e05545; border-color: var(--automation); }
+.tag-cron  { color: var(--dim); border-color: var(--border2); }
+.actor-card .a-desc { font-size: 9px; color: var(--dim); }
+.actor-card .a-trig { font-size: 9px; color: #888; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.actor-card .a-trig b { color: var(--text); font-weight: 600; }
+
+/* ── SEGMENT ANATOMY ── */
+.seg-anatomy { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.seg-dim { background: var(--surface); border: 1px solid var(--border); padding: 12px 13px; }
+.seg-dim .d-name { font-weight: 600; color: #e0e0e0; font-size: 11px; margin-bottom: 8px; }
+.seg-dim .d-vals { display: flex; flex-direction: column; gap: 4px; }
+.seg-dim .d-val { font-size: 9px; color: var(--dim); }
+.seg-dim .d-val b { color: #9a9a9a; font-weight: 400; }
+
+/* ── TIMELINE ── */
+.tl-bar {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+.tl-tick {
+  flex: 1;
+  min-width: 110px;
+  padding: 10px 10px;
+  border-right: 1px solid var(--border);
+  opacity: .35;
+  transition: opacity .2s, background .2s;
+  cursor: pointer;
+}
+.tl-tick:hover { opacity: .85; background: #0c1018; }
+.tl-tick:last-child { border-right: none; }
+.tl-tick.active { opacity: 1; background: #0c1420; box-shadow: inset 0 -2px 0 #3b7dd8; }
+.tl-tick .tl-hint { font-size: 7px; color: var(--dimmer); margin-top: 3px; letter-spacing: .08em; text-transform: uppercase; }
+.tl-tick:hover .tl-hint { color: #5a9de8; }
+.tl-tick.done { opacity: .55; }
+.tl-time { font-size: 13px; font-weight: 600; color: #e0e0e0; }
+.tl-tick.active .tl-time { color: #7ab3f0; }
+.tl-tick.done .tl-time { color: var(--done); }
+.tl-label { font-size: 8px; color: var(--dim); margin-top: 2px; line-height: 1.4; }
+.tl-actor { font-size: 8px; margin-top: 4px; padding: 1px 4px; border: 1px solid; display: inline-block; letter-spacing: .04em; }
+
+/* controls */
+.tl-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.btn-next {
+  background: #1e3a5f; border: 1px solid #3b7dd8; color: #7ab3f0;
+  padding: 10px 20px; font-family: var(--mono); font-size: 11px; font-weight: 600;
+  cursor: pointer; letter-spacing: .05em; transition: background .15s, color .15s;
+}
+.btn-next:hover:not(:disabled) { background: #264a7a; color: #a8ccf5; }
+.btn-next:disabled { opacity: .25; cursor: not-allowed; }
+.btn {
+  background: transparent; border: 1px solid var(--border2); color: var(--dim);
+  padding: 10px 14px; font-family: var(--mono); font-size: 10px; cursor: pointer;
+  letter-spacing: .04em; transition: border-color .15s, color .15s;
+}
+.btn:hover { color: var(--text); }
+.tl-narration { flex: 1; font-size: 10px; color: #9a9a9a; padding-left: 6px; }
+.tl-narration b { color: #d8c890; }
+
+/* board */
+.board { display: grid; grid-template-columns: 280px 1fr; gap: 12px; }
+
+/* active segment panel */
+.seg-panel { background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; align-self: start; }
+.seg-panel.paused { border-color: #3a2a10; }
+.seg-panel .sp-title { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); margin-bottom: 10px; }
+.seg-panel .sp-state { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.seg-panel .sp-state.on { color: #5a9de8; }
+.seg-panel .sp-state.off { color: #c0a030; }
+.seg-panel .sp-by { font-size: 9px; color: var(--dim); margin-bottom: 12px; }
+.seg-panel .sp-filters { display: flex; flex-direction: column; gap: 6px; }
+.sp-filter { display: flex; gap: 8px; font-size: 10px; align-items: baseline; }
+.sp-filter .fk { color: var(--dim); min-width: 54px; }
+.sp-filter .fv { color: var(--text); }
+.seg-panel .sp-counts { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 9px; color: var(--dim); display:flex; flex-direction:column; gap:3px; }
+.seg-panel .sp-counts b { color: #9a9a9a; font-weight: 600; }
+
+/* tables */
+.tbl { background: var(--surface); border: 1px solid var(--border); margin-bottom: 12px; }
+.tbl-head { display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); gap: 10px; }
+.tbl-name { font-weight: 600; color: #e0e0e0; font-size: 11px; }
+.tbl-role { font-size: 9px; color: var(--dim); margin-left: auto; text-transform: uppercase; letter-spacing: .06em; }
+.tbl-body { padding: 6px 12px; min-height: 70px; }
+.empty { color: var(--dimmer); font-size: 10px; padding: 6px 0; }
+
+.lead-row {
+  display: flex; gap: 10px; align-items: center;
+  padding: 5px 6px; border-bottom: 1px solid var(--border);
+  font-size: 10px; animation: fadeIn .25s ease; border-left: 2px solid transparent;
+}
+.lead-row:last-child { border-bottom: none; }
+.lead-row.waiting { border-left-color: var(--waiting); }
+.lead-row.dialing { border-left-color: var(--dialing); background: #0c1420; }
+.lead-row.executed { opacity: .4; }
+.lead-row.just-arrived { background: #14100a; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { background:#0c1420; } 50% { background:#13243a; } }
+.lead-row.dialing { animation: pulse 1s ease-in-out infinite; }
+
+.l-id    { color: var(--dim); width: 42px; flex-shrink: 0; }
+.l-phone { color: var(--text); width: 110px; flex-shrink: 0; }
+.l-origin{ width: 92px; flex-shrink: 0; }
+.l-src   { color: var(--dim); width: 110px; flex-shrink: 0; font-size: 9px; }
+.l-date  { width: 44px; flex-shrink: 0; }
+.l-state { margin-left: auto; flex-shrink: 0; }
+
+.badge { display: inline-block; padding: 1px 6px; font-size: 9px; font-weight: 600; border: 1px solid; letter-spacing: .04em; white-space: nowrap; }
+.b-digital   { color: #7ab3f0; border-color: var(--digital); }
+.b-analogico { color: #d8a850; border-color: var(--analogico); }
+.b-ayer      { color: var(--dim); border-color: var(--border2); }
+.b-hoy       { color: #9a9a9a; border-color: var(--border2); }
+.b-waiting   { color: #3ab5c5; border-color: var(--waiting); }
+.b-dialing   { color: #5a9de8; border-color: var(--dialing); }
+.b-done      { color: #4dbf7f; border-color: var(--done); }
+.b-answered  { color: #4dbf7f; border-color: var(--done); }
+.b-noanswer  { color: var(--dim); border-color: var(--border2); }
+
+/* legend */
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 18px; font-size: 9px; color: var(--dim); }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+
+/* ── SCHEMA (igual que callback-batch-architecture.html) ── */
+.schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.schema-card { background: var(--surface); border: 1px solid var(--border); padding: 12px 14px; }
+.schema-card.new { border-color: #1a3a2a; }
+.s-tbl-name { font-weight: 600; color: #e0e0e0; font-size: 11px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.s-existing { font-size: 9px; font-weight: 400; color: var(--dim); }
+.s-new { font-size: 8px; font-weight: 700; color: #2d9e5f; letter-spacing: .1em; }
+.s-field { display: grid; grid-template-columns: 175px 115px 1fr; gap: 6px; padding: 2px 0; font-size: 10px; border-bottom: 1px solid var(--border); }
+.s-field:last-child { border-bottom: none; }
+.s-fname { color: var(--text); }
+.s-ftype { color: #7a5fc0; }
+.s-fnote { color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <h1>Callback — Flujo del Lead</h1>
+    <p>orígenes · disparadores · día del supervisor</p>
+    <span class="companion">complementa → <a href="callback-batch-architecture.html">callback-batch-architecture.html</a> (capa de datos)</span>
+  </div>
+
+  <!-- ══════ ACLARACIONES & DECISIONES ══════ -->
+  <div class="notes">
+    <h2>⚑ Aclaraciones &amp; decisiones de diseño</h2>
+
+    <div class="sub-h"><span class="confirmed">✓ Confirmado contigo</span></div>
+    <div class="note-item"><span class="mark">✓</span><span class="body">Las <b>automatizaciones ya existen y son configurables</b>. Insertan el lead <b>directo en</b> <code>callback_requests</code> (<code>cr_uuid = NULL</code> = pendiente). No hay tabla/pool nuevo.</span></div>
+    <div class="note-item"><span class="mark">✓</span><span class="body">El <b>execution cron</b> corre y disca de inmediato cuando se agrega un llamado — sujeto al <b>segmento activo</b> de ese momento.</span></div>
+    <div class="note-item"><span class="mark">✓</span><span class="body">El supervisor filtra el despacho por <b>4 dimensiones combinables</b>: <b>origen</b> · <b>fecha/rango</b> · <b>cola/campaña</b> · <b>estado del lead</b>.</span></div>
+    <div class="note-item"><span class="mark">✓</span><span class="body">Arranque/parada del despacho: <b>ventanas programadas + disparo manual</b> del supervisor (ambos coexisten).</span></div>
+    <div class="note-item"><span class="mark">✓</span><span class="body">Actores que disparan despacho: <b>reglas de automatización</b>, <b>programación horaria</b>, <b>supervisor manual</b> (+ los crons del sistema).</span></div>
+
+    <div class="sub-h"><span class="open">? Asunciones a validar con devs</span></div>
+    <div class="note-item"><span class="mark">?</span><span class="body"><b>Modelo central:</b> <code>callback_requests</code> actúa como <b>pool de pendientes</b>. El supervisor NO mueve leads entre tablas — cambia <b>qué segmento del pool se está discando</b>. ¿De acuerdo?</span></div>
+    <div class="note-item"><span class="mark">?</span><span class="body"><b>Gating por segmento:</b> ¿el execution cron <b>filtra en el query</b> (WHERE origen/fecha/cola/estado ∈ segmento activo), o se <b>activan/pausan flags</b> por segmento? Impacta el schema.</span></div>
+    <div class="note-item"><span class="mark">?</span><span class="body"><b>¿Dónde viven origen/fecha/estado del lead?</b> <code>callback_requests</code> hoy guarda <code>cr_source</code> ('batch'/'automation'). Para filtrar por <b>origen del lead</b> (analógico/digital + sub-fuente) y <b>estado</b> hace falta o columnas nuevas o JOIN a la tabla de leads.</span></div>
+    <div class="note-item"><span class="mark">?</span><span class="body"><b>Segmento activo simultáneo:</b> ¿puede haber <b>varios segmentos activos a la vez</b> (digital programado + analógico manual), o es <b>uno excluyente</b>? La vista asume uno por vez para claridad.</span></div>
+    <div class="note-item"><span class="mark">?</span><span class="body"><b>Prioridad/orden:</b> dentro del segmento activo, ¿en qué orden disca? (FIFO por ingreso, por fecha del lead, por "chance de venta"/scoring tras la publicidad de TV).</span></div>
+    <div class="note-item"><span class="mark">?</span><span class="body"><b>"Todos los leads de la compañía" (13:00):</b> ¿segmento sin filtros = todo el pool pendiente, o incluye re-llamar leads ya tratados hoy?</span></div>
+  </div>
+
+  <!-- ══════ 1. ORÍGENES ══════ -->
+  <div class="section">
+    <div class="section-title"><span class="idx">01</span> Orígenes del lead</div>
+    <div class="section-sub">Todo lead entra al sistema por un origen. El origen es una de las dimensiones de filtrado del despacho.</div>
+    <div class="origins-grid">
+      <div class="origin-card analogico">
+        <div class="origin-head"><span class="name">Analógico</span><span class="tag">canal humano / voz</span></div>
+        <div class="source-row"><span class="source-dot"></span><span class="source-name">Atención operador</span><span class="source-desc">agente humano carga / atiende</span></div>
+        <div class="source-row"><span class="source-dot"></span><span class="source-name">Sincronización</span><span class="source-desc">lead abandonado / no atendido → re-ingresa</span></div>
+        <div class="source-row"><span class="source-dot"></span><span class="source-name">Voicebot</span><span class="source-desc">bot de voz captura el lead</span></div>
+      </div>
+      <div class="origin-card digital">
+        <div class="origin-head"><span class="name">Digital</span><span class="tag">canal automático</span></div>
+        <div class="source-row"><span class="source-dot"></span><span class="source-name">Prelead / Chat</span><span class="source-desc">son lo mismo — chat web/app</span></div>
+        <div class="source-row"><span class="source-dot"></span><span class="source-name">Facebook Form</span><span class="source-desc">lead ad / formulario Meta</span></div>
+        <div class="source-row"><span class="source-dot"></span><span class="source-name">API Landing</span><span class="source-desc">landing page vía API</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ 2. ACTORES / DISPARADORES ══════ -->
+  <div class="section">
+    <div class="section-title"><span class="idx">02</span> Actores &amp; disparadores</div>
+    <div class="section-sub">Tres actores deciden <b>qué</b> y <b>cuándo</b> se disca. Los crons del sistema sólo ejecutan.</div>
+    <div class="actors-grid">
+      <div class="actor-card">
+        <div class="a-name">Automatización <span class="a-tag tag-auto">evento</span></div>
+        <div class="a-desc">Regla configurable: "si ingresa lead X → a callback". Ya existe.</div>
+        <div class="a-trig"><b>Dispara:</b> inserta en <code style="color:#7ab3f0">callback_requests</code> al ocurrir el evento.</div>
+      </div>
+      <div class="actor-card">
+        <div class="a-name">Programación <span class="a-tag tag-sched">tiempo</span></div>
+        <div class="a-desc">Ventanas horarias por segmento. Auto-arranca y auto-detiene el despacho.</div>
+        <div class="a-trig"><b>Dispara:</b> activa/pausa un segmento (ej. 08:00–10:50 digitales).</div>
+      </div>
+      <div class="actor-card">
+        <div class="a-name">Supervisor <span class="a-tag tag-sup">manual</span></div>
+        <div class="a-desc">Decisión humana en el momento, según contexto (publicidad, faltan leads).</div>
+        <div class="a-trig"><b>Dispara:</b> activa un segmento on-demand con filtros elegidos.</div>
+      </div>
+      <div class="actor-card">
+        <div class="a-name">Sistema / cron <span class="a-tag tag-cron">ejecuta</span></div>
+        <div class="a-desc">batch cron + execution cron. No deciden política, sólo ejecutan el segmento activo.</div>
+        <div class="a-trig"><b>Ejecuta:</b> disca pendientes del pool que matchean el segmento.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ 3. ANATOMÍA DEL SEGMENTO ══════ -->
+  <div class="section">
+    <div class="section-title"><span class="idx">03</span> Anatomía de un segmento de despacho</div>
+    <div class="section-sub">Un <b>segmento</b> = combinación de filtros sobre el pool de pendientes. Cualquier actor lo activa. El cron disca sólo lo que matchea.</div>
+    <div class="seg-anatomy">
+      <div class="seg-dim">
+        <div class="d-name">Origen</div>
+        <div class="d-vals">
+          <div class="d-val"><b>Analógico</b> · operador · sincronización · voicebot</div>
+          <div class="d-val"><b>Digital</b> · chat/prelead · facebook · api landing</div>
+        </div>
+      </div>
+      <div class="seg-dim">
+        <div class="d-name">Fecha / rango</div>
+        <div class="d-vals">
+          <div class="d-val"><b>Hoy</b> · <b>Ayer</b> · rango custom</div>
+          <div class="d-val">por fecha de ingreso del lead</div>
+        </div>
+      </div>
+      <div class="seg-dim">
+        <div class="d-name">Cola / campaña</div>
+        <div class="d-vals">
+          <div class="d-val"><b>queue_id</b> / producto</div>
+          <div class="d-val">0 = sin cola</div>
+        </div>
+      </div>
+      <div class="seg-dim">
+        <div class="d-name">Estado del lead</div>
+        <div class="d-vals">
+          <div class="d-val"><b>abandonado</b> · sin atender</div>
+          <div class="d-val">nº intentos previos (touch limit)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ 4. TIMELINE INTERACTIVO ══════ -->
+  <div class="section">
+    <div class="section-title"><span class="idx">04</span> El día del supervisor — flujo del lead en vivo</div>
+    <div class="section-sub">Avanzá evento por evento. Mirá cómo las automatizaciones llenan el pool y el supervisor/programación cambian qué <b>segmento</b> se disca. Los leads no cambian de tabla — cambia su <b>elegibilidad</b>.</div>
+
+    <div class="tl-bar" id="tl-bar"></div>
+
+    <div class="tl-controls">
+      <button class="btn-next" id="btn-next" onclick="nextStep()">▶ Iniciar — 07:00</button>
+      <button class="btn" onclick="reset()">reset</button>
+      <div class="tl-narration" id="narration">El supervisor llega. El pool tiene leads digitales de ayer + automatizaciones corriendo.</div>
+    </div>
+
+    <div class="board">
+      <!-- active segment panel -->
+      <div class="seg-panel" id="seg-panel">
+        <div class="sp-title">Segmento activo ahora</div>
+        <div class="sp-state off" id="sp-state">— en espera —</div>
+        <div class="sp-by" id="sp-by">aún no inicia</div>
+        <div class="sp-filters" id="sp-filters"></div>
+        <div class="sp-counts" id="sp-counts"></div>
+      </div>
+
+      <!-- queue + executed -->
+      <div>
+        <div class="tbl">
+          <div class="tbl-head">
+            <span class="tbl-name">callback_requests</span>
+            <span class="tbl-role">pool de pendientes · cr_uuid = NULL</span>
+          </div>
+          <div class="tbl-body" id="queue-body"><div class="empty">— cargando…</div></div>
+        </div>
+        <div class="tbl">
+          <div class="tbl-head">
+            <span class="tbl-name">callback_executed</span>
+            <span class="tbl-role">archivo · llamadas discadas</span>
+          </div>
+          <div class="tbl-body" id="exec-body"><div class="empty">— vacía</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="badge b-waiting">esperando</span> en pool, fuera del segmento activo</div>
+      <div class="legend-item"><span class="badge b-dialing">discando</span> matchea segmento activo → execution cron</div>
+      <div class="legend-item"><span class="badge b-done">discado</span> archivado en callback_executed</div>
+      <div class="legend-item"><span class="badge b-digital">digital</span> / <span class="badge b-analogico">analógico</span> origen</div>
+    </div>
+  </div>
+
+  <!-- ══════ 5. SCHEMA (mismas tablas que la vista de arquitectura) ══════ -->
+  <div class="section">
+    <div class="section-title"><span class="idx">05</span> Tablas de la base <span style="color:var(--dim);text-transform:none;letter-spacing:0">— mismas que callback-batch-architecture.html</span></div>
+    <div class="section-sub">El flujo de arriba opera sobre estas 4 tablas. <b>Nada cambia de tabla por el despacho</b>: el segmento activo solo cambia qué filas de <code style="color:#7ab3f0">callback_requests</code> son elegibles.</div>
+    <div class="schema-grid">
+
+      <div class="schema-card new">
+        <div class="s-tbl-name">callback_scheduled <span class="s-new">NEW</span></div>
+        <div class="s-field"><span class="s-fname">cs_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
+        <div class="s-field"><span class="s-fname">cs_retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
+        <div class="s-field"><span class="s-fname">cs_user_id</span><span class="s-ftype">INT NOT NULL</span><span class="s-fnote">quién creó el batch</span></div>
+        <div class="s-field"><span class="s-fname">cs_did</span><span class="s-ftype">VARCHAR(20)</span><span class="s-fnote">DID saliente, requerido</span></div>
+        <div class="s-field"><span class="s-fname">cs_queue_id</span><span class="s-ftype">INT</span><span class="s-fnote">default 0</span></div>
+        <div class="s-field"><span class="s-fname">cs_status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|in_progress|completed|error</span></div>
+        <div class="s-field"><span class="s-fname">cs_started_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
+        <div class="s-field"><span class="s-fname">cs_completed_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
+        <div class="s-field"><span class="s-fname">created_at / updated_at</span><span class="s-ftype">TIMESTAMP</span><span class="s-fnote">—</span></div>
+      </div>
+
+      <div class="schema-card new">
+        <div class="s-tbl-name">callback_entities_treated <span class="s-new">NEW</span></div>
+        <div class="s-field"><span class="s-fname">cet_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
+        <div class="s-field"><span class="s-fname">cet_scheduled_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">→ callback_scheduled.cs_id</span></div>
+        <div class="s-field"><span class="s-fname">cet_entity_id</span><span class="s-ftype">INT</span><span class="s-fnote">lead ID</span></div>
+        <div class="s-field"><span class="s-fname">cet_entity_type</span><span class="s-ftype">ENUM('lead')</span><span class="s-fnote">extensible</span></div>
+        <div class="s-field"><span class="s-fname">cet_status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|scheduled|completed|skipped|error</span></div>
+        <div class="s-field"><span class="s-fname">cet_reason</span><span class="s-ftype">VARCHAR(100)</span><span class="s-fnote">nullable — skipped + error</span></div>
+        <div class="s-field"><span class="s-fname">cet_callback_request_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">nullable → callback_requests.cr_id</span></div>
+        <div class="s-field"><span class="s-fname">created_at / updated_at</span><span class="s-ftype">TIMESTAMP</span><span class="s-fnote">—</span></div>
+      </div>
+
+      <div class="schema-card">
+        <div class="s-tbl-name">callback_requests <span class="s-existing">existente · pool de pendientes</span></div>
+        <div class="s-field"><span class="s-fname">cr_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">—</span></div>
+        <div class="s-field"><span class="s-fname">cr_retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
+        <div class="s-field"><span class="s-fname">cr_target_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">DID saliente — quien llama (from)</span></div>
+        <div class="s-field"><span class="s-fname">cr_callback_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">teléfono del lead — a quien se llama (to)</span></div>
+        <div class="s-field"><span class="s-fname">cr_uuid</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">NULL=pendiente / valor=ejecutado</span></div>
+        <div class="s-field"><span class="s-fname">cr_queue_id</span><span class="s-ftype">INT</span><span class="s-fnote">filtro de segmento · 0 = sin cola</span></div>
+        <div class="s-field"><span class="s-fname">cr_entity_id</span><span class="s-ftype">INT</span><span class="s-fnote">lead ID</span></div>
+        <div class="s-field"><span class="s-fname">cr_source</span><span class="s-ftype">VARCHAR(50)</span><span class="s-fnote">origen — 'batch', 'automation'</span></div>
+      </div>
+
+      <div class="schema-card">
+        <div class="s-tbl-name">callback_executed <span class="s-existing">existente · archivo</span></div>
+        <div class="s-field"><span class="s-fname">ce_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">—</span></div>
+        <div class="s-field"><span class="s-fname">ce_retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
+        <div class="s-field"><span class="s-fname">ce_uuid</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">UUID del autocall</span></div>
+        <div class="s-field"><span class="s-fname">ce_target_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">DID saliente — quien llama (from)</span></div>
+        <div class="s-field"><span class="s-fname">ce_callback_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">teléfono del lead — a quien se llama (to)</span></div>
+        <div class="s-field"><span class="s-fname">answer_state</span><span class="s-ftype">ENUM</span><span class="s-fnote">answered | not_answered | busy | ...</span></div>
+        <div class="s-field"><span class="s-fname">start_epoch</span><span class="s-ftype">INT</span><span class="s-fnote">timestamp inicio llamada</span></div>
+      </div>
+
+    </div>
+    <div class="section-sub" style="margin-top:14px">
+      <b style="color:#c0a030">? Para filtrar por segmento</b> (origen analógico/digital + sub-fuente + estado del lead) hoy <code style="color:#7ab3f0">callback_requests</code> solo trae <code>cr_source</code>. Hace falta decidir: <b>columnas nuevas</b> (cr_origin, cr_lead_date, cr_lead_state) <b>o JOIN</b> a la tabla de leads. — decisión abierta para devs.
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── LEADS (entran al pool a lo largo del día) ── */
+const LEADS = [
+  { id: 4801, phone: '+5491155550021', origin: 'digital',   src: 'chat',          date: 'ayer', state: 'abandonado', arrive: 0 },
+  { id: 4802, phone: '+5491155550034', origin: 'digital',   src: 'facebook_form', date: 'ayer', state: 'sin atender',arrive: 0 },
+  { id: 4803, phone: '+5491155550089', origin: 'digital',   src: 'api_landing',   date: 'ayer', state: 'sin atender',arrive: 0 },
+  { id: 4810, phone: '+5491155550012', origin: 'analogico', src: 'sincronización', date: 'hoy', state: 'abandonado', arrive: 1 },
+  { id: 4811, phone: '+5491155550067', origin: 'analogico', src: 'voicebot',       date: 'hoy', state: 'sin atender',arrive: 1 },
+  { id: 4812, phone: '+5491155550103', origin: 'analogico', src: 'operador',       date: 'hoy', state: 'abandonado', arrive: 3 },
+  { id: 4820, phone: '+5491155550155', origin: 'digital',   src: 'chat',          date: 'hoy', state: 'sin atender',arrive: 5 },
+  { id: 4821, phone: '+5491155550188', origin: 'analogico', src: 'sincronización', date: 'hoy', state: 'abandonado', arrive: 5 },
+];
+
+/* ── EVENTOS DEL DÍA ── */
+const STEPS = [
+  {
+    time: '07:00', label: 'Supervisor llega', actor: 'sup',
+    seg: { origin: ['digital'], date: ['ayer'], queue: 'todas', state: 'todos', match: l => l.origin==='digital' && l.date==='ayer' },
+    byText: 'disparo manual del supervisor',
+    narration: 'El supervisor decide <b>empezar a llamar todos los leads digitales de ayer</b>. Activa el segmento y el execution cron empieza a discar.'
+  },
+  {
+    time: '09:00–10:20', label: 'Automatizaciones', actor: 'auto',
+    seg: { origin: ['digital'], date: ['ayer'], queue: 'todas', state: 'todos', match: l => l.origin==='digital' && l.date==='ayer' },
+    byText: 'ventana digital sigue activa (programada)',
+    narration: 'Las <b>automatizaciones insertan leads analógicos</b> (sincronización, voicebot) en el pool. Quedan <b>esperando</b>: no son el segmento activo.'
+  },
+  {
+    time: '10:50', label: 'Programación detiene', actor: 'sched',
+    seg: null,
+    byText: 'programación horaria — ventana cerrada',
+    narration: 'Por <b>programación, la ventana digital se detiene</b>. El despacho queda en pausa. Los analógicos del pool siguen esperando.'
+  },
+  {
+    time: '11:00', label: '📺 Publicidad TV', actor: 'auto',
+    seg: null,
+    byText: 'despacho en pausa — priorizando publicidad',
+    narration: 'Sale la <b>publicidad de TV</b>: estos leads tienen <b>más chance de venta</b> y pasan a ser <b>prioridad</b>. Entra un analógico (operador) de la campaña. Los <b>digitales quedan retenidos a propósito</b> — no se llaman hasta agotar los de publicidad.'
+  },
+  {
+    time: '11:30', label: 'Supervisor: analógicos', actor: 'sup',
+    seg: { origin: ['analogico'], date: ['hoy'], queue: 'todas', state: 'todos', match: l => l.origin==='analogico' && l.date==='hoy' },
+    byText: 'disparo manual — solo prioridad publicidad',
+    narration: 'El supervisor dispara el segmento <b>analógico de hoy</b> (los de la publicidad, más conversión). Los <b>digitales NO se llaman</b>: primero hay que <b>agotar la prioridad</b>. El cron disca solo los analógicos acumulados.'
+  },
+  {
+    time: '12:30–12:45', label: 'Nuevos ingresos', actor: 'auto',
+    seg: null,
+    byText: 'despacho en pausa',
+    narration: 'Entran <b>nuevos leads</b> (digital hoy + analógico hoy) por automatización. Esperan: ningún segmento está activo en este instante.'
+  },
+  {
+    time: '13:00', label: 'Supervisor: TODOS', actor: 'sup',
+    seg: { origin: ['digital','analogico'], date: ['hoy','ayer'], queue: 'todas', state: 'todos', match: l => true },
+    byText: 'disparo manual — prioridad agotada, se abre al resto',
+    narration: 'Ya <b>agotó los de la publicidad</b> y faltan leads (no hay más publicidad hasta tarde). <b>Recién ahora</b> el supervisor abre a <b>todos los leads de la compañía</b> — incluidos los <b>digitales que estaban retenidos</b>.'
+  },
+];
+
+const ANSWER = id => (id % 2 === 0 ? 'answered' : 'not_answered');
+
+let cur = -1;
+const state = {}; // id -> 'waiting' | 'dialing' | 'executed'
+LEADS.forEach(l => state[l.id] = 'pre');
+
+const actorTag = { sup:['tag-sup','supervisor'], sched:['tag-sched','programación'], auto:['tag-auto','automatización'] };
+
+/* ── TIMELINE BAR (clickable) ── */
+function renderBar() {
+  document.getElementById('tl-bar').innerHTML = STEPS.map((s, i) => {
+    const [cls, txt] = actorTag[s.actor];
+    return `<div class="tl-tick ${i===cur?'active':''} ${i<cur?'done':''}" id="tick-${i}" onclick="goTo(${i})" title="Ir a ${s.time}">
+      <div class="tl-time">${s.time}</div>
+      <div class="tl-label">${s.label}</div>
+      <div class="tl-actor ${cls}">${txt}</div>
+      <div class="tl-hint">${i===cur?'● aquí':'click ↗'}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── ROW BUILDERS ── */
+function originBadge(l) {
+  return l.origin === 'digital'
+    ? `<span class="badge b-digital">digital</span>`
+    : `<span class="badge b-analogico">analógico</span>`;
+}
+function stateBadge(st) {
+  if (st === 'waiting')  return `<span class="badge b-waiting">esperando</span>`;
+  if (st === 'dialing')  return `<span class="badge b-dialing">discando</span>`;
+  if (st === 'executed') return `<span class="badge b-done">discado</span>`;
+  return '';
+}
+function leadRow(l, justArrived) {
+  const st = state[l.id];
+  return `<div class="lead-row ${st} ${justArrived?'just-arrived':''}">
+    <span class="l-id">#${l.id}</span>
+    <span class="l-phone">${l.phone}</span>
+    <span class="l-origin">${originBadge(l)}</span>
+    <span class="l-src">${l.src}</span>
+    <span class="l-date"><span class="badge b-${l.date}">${l.date}</span></span>
+    <span class="l-state">${stateBadge(st)}</span>
+  </div>`;
+}
+
+function renderQueue(justArrivedIds = []) {
+  const inPool = LEADS.filter(l => state[l.id] === 'waiting' || state[l.id] === 'dialing');
+  const body = document.getElementById('queue-body');
+  if (!inPool.length) { body.innerHTML = '<div class="empty">— pool vacío</div>'; return; }
+  body.innerHTML = inPool.map(l => leadRow(l, justArrivedIds.includes(l.id))).join('');
+}
+
+function renderExec() {
+  const done = LEADS.filter(l => state[l.id] === 'executed');
+  const body = document.getElementById('exec-body');
+  if (!done.length) { body.innerHTML = '<div class="empty">— vacía</div>'; return; }
+  body.innerHTML = done.map(l => {
+    const ans = ANSWER(l.id);
+    return `<div class="lead-row executed" style="opacity:.7">
+      <span class="l-id">#${l.id}</span>
+      <span class="l-phone">${l.phone}</span>
+      <span class="l-origin">${originBadge(l)}</span>
+      <span class="l-src">${l.src}</span>
+      <span class="l-date"><span class="badge b-${l.date}">${l.date}</span></span>
+      <span class="l-state"><span class="badge ${ans==='answered'?'b-answered':'b-noanswer'}">${ans}</span></span>
+    </div>`;
+  }).join('');
+}
+
+/* ── SEGMENT PANEL ── */
+function renderSeg(step) {
+  const panel = document.getElementById('seg-panel');
+  const stEl = document.getElementById('sp-state');
+  const byEl = document.getElementById('sp-by');
+  const fEl  = document.getElementById('sp-filters');
+  const cEl  = document.getElementById('sp-counts');
+
+  const waiting  = LEADS.filter(l => state[l.id]==='waiting').length;
+  const executed = LEADS.filter(l => state[l.id]==='executed').length;
+  const dialing  = LEADS.filter(l => state[l.id]==='dialing').length;
+
+  if (!step || !step.seg) {
+    panel.classList.add('paused');
+    stEl.className = 'sp-state off'; stEl.textContent = '⏸ despacho en pausa';
+    byEl.textContent = step ? step.byText : 'aún no inicia';
+    fEl.innerHTML = '<div class="sp-filter"><span class="fk">—</span><span class="fv" style="color:var(--dim)">ningún segmento activo</span></div>';
+  } else {
+    panel.classList.remove('paused');
+    stEl.className = 'sp-state on'; stEl.textContent = '● discando';
+    byEl.textContent = step.byText;
+    const s = step.seg;
+    fEl.innerHTML = `
+      <div class="sp-filter"><span class="fk">origen</span><span class="fv">${s.origin.join(' + ')}</span></div>
+      <div class="sp-filter"><span class="fk">fecha</span><span class="fv">${s.date.join(' + ')}</span></div>
+      <div class="sp-filter"><span class="fk">cola</span><span class="fv">${s.queue}</span></div>
+      <div class="sp-filter"><span class="fk">estado</span><span class="fv">${s.state}</span></div>`;
+  }
+  cEl.innerHTML = `
+    <div>pool esperando: <b>${waiting}</b></div>
+    <div>discando ahora: <b>${dialing}</b></div>
+    <div>discados (total): <b>${executed}</b></div>`;
+}
+
+/* ── STEP ENGINE (determinístico, navegable) ── */
+let settleTimer = null;
+
+// recalcula el estado completo desde cero hasta `target` y lo dibuja
+function goTo(target) {
+  if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+  cur = target;
+
+  // reset y replay 0..target
+  LEADS.forEach(l => state[l.id] = 'pre');
+  let justArrived = [];
+  for (let i = 0; i <= target; i++) {
+    const step = STEPS[i];
+    const arr = [];
+    LEADS.forEach(l => {
+      if (l.arrive === i && state[l.id] === 'pre') { state[l.id] = 'waiting'; arr.push(l.id); }
+    });
+    if (i === target) justArrived = arr;
+    if (step.seg) {
+      LEADS.forEach(l => {
+        if (state[l.id] === 'waiting' && step.seg.match(l)) {
+          // pasos anteriores ya quedaron discados; el paso actual muestra 'discando'
+          state[l.id] = (i === target) ? 'dialing' : 'executed';
+        }
+      });
+    }
+  }
+
+  const step = STEPS[target];
+  renderBar();
+  renderQueue(justArrived);
+  renderExec();
+  renderSeg(step);
+  document.getElementById('narration').innerHTML = step.narration;
+
+  // anima discando -> discado en el paso actual
+  if (step.seg && LEADS.some(l => state[l.id] === 'dialing')) {
+    settleTimer = setTimeout(() => {
+      LEADS.forEach(l => { if (state[l.id] === 'dialing') state[l.id] = 'executed'; });
+      renderQueue(); renderExec(); renderSeg(step); settleTimer = null;
+    }, 1400);
+  }
+
+  // botón
+  const btn = document.getElementById('btn-next');
+  if (cur >= STEPS.length - 1) { btn.textContent = '✓ Día completo — reset para repetir'; btn.disabled = true; }
+  else { btn.textContent = `▶ Siguiente — ${STEPS[cur+1].time}`; btn.disabled = false; }
+}
+
+function nextStep() {
+  if (cur >= STEPS.length - 1) return;
+  goTo(cur + 1);
+}
+
+function reset() {
+  if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+  cur = -1;
+  LEADS.forEach(l => state[l.id] = 'pre');
+  renderBar();
+  document.getElementById('queue-body').innerHTML = '<div class="empty">— el pool se llena al iniciar (click en un hito o ▶)</div>';
+  document.getElementById('exec-body').innerHTML = '<div class="empty">— vacía</div>';
+  renderSeg(null);
+  document.getElementById('narration').innerHTML = 'El supervisor llega. El pool tiene leads digitales de ayer + automatizaciones corriendo. <b>Hacé click en cualquier hito de la línea de tiempo</b> o usá ▶.';
+  const btn = document.getElementById('btn-next');
+  btn.textContent = '▶ Iniciar — 07:00'; btn.disabled = false;
+}
+
+window.onload = () => { renderBar(); renderSeg(null);
+  document.getElementById('queue-body').innerHTML = '<div class="empty">— el pool se llena al iniciar (click en un hito o ▶)</div>'; };
+</script>
+</body>
+</html>

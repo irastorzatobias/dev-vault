@@ -1,0 +1,20 @@
+[
+  {
+    "file": "callback-batch-architecture.html",
+    "title": "Callback Batch — Architecture",
+    "description": "4 tablas, 2 crons, flujo de datos interactivo",
+    "domain": "Callback",
+    "status": "en-revision",
+    "author": "tobias",
+    "updated": "2026-06-22"
+  },
+  {
+    "file": "callback-lead-flow.html",
+    "title": "Callback — Flujo del Lead",
+    "description": "Orígenes, actores, segmentos de despacho, día del supervisor",
+    "domain": "Callback",
+    "status": "en-discusion",
+    "author": "tobias",
+    "updated": "2026-06-22"
+  }
+]

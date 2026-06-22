@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Callback Batch — System Architecture</title>
+<style>
+:root {
+  --bg: #080808;
+  --surface: #0f0f0f;
+  --surface2: #141414;
+  --border: #1a1a1a;
+  --border2: #242424;
+  --text: #c8c8c8;
+  --dim: #4a4a4a;
+  --dimmer: #2a2a2a;
+
+  --pending:    #4a4a4a;
+  --progress:   #3b7dd8;
+  --completed:  #2d9e5f;
+  --cancelled:  #b07d2a;
+  --error:      #c0392b;
+  --skipped:    #8a7022;
+  --scheduled:  #1a7a8a;
+
+  --mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 40px 32px 80px;
+}
+
+/* ── HEADER ── */
+.hdr {
+  max-width: 1020px;
+  margin: 0 auto 36px;
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+.hdr h1 { font-size: 12px; font-weight: 600; color: #e0e0e0; letter-spacing: .08em; text-transform: uppercase; }
+.hdr p  { font-size: 10px; color: var(--dim); }
+
+/* ── CONTROLS ── */
+.controls {
+  max-width: 1020px;
+  margin: 0 auto 24px;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: .3;
+  transition: opacity .2s;
+}
+.step.active   { opacity: 1; }
+.step.done     { opacity: .5; }
+
+.step-num {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dim);
+  min-width: 28px;
+}
+.step.active .step-num { color: #5a9de8; }
+.step.done   .step-num { color: var(--completed); }
+
+.step-title { font-size: 11px; font-weight: 600; color: #e0e0e0; }
+.step-sub   { font-size: 9px; color: var(--dim); margin-top: 1px; }
+
+.step-arrow { color: var(--dimmer); font-size: 14px; flex-shrink: 0; }
+
+.step-spacer { flex: 1; }
+
+.btn-next {
+  background: #1e3a5f;
+  border: 1px solid #3b7dd8;
+  color: #7ab3f0;
+  padding: 10px 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: .05em;
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+.btn-next:hover { background: #264a7a; color: #a8ccf5; }
+.btn-next:disabled { opacity: .25; cursor: not-allowed; }
+
+.btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--dim);
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: border-color .15s, color .15s;
+}
+.btn:hover:not(:disabled) { border-color: var(--border2); color: var(--text); }
+.btn:disabled { opacity: .25; cursor: not-allowed; }
+.btn-reset { flex-shrink: 0; }
+
+/* ── PIPELINE ── */
+.pipeline {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+/* Layer labels */
+.layer-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--dimmer);
+  margin-bottom: 6px;
+}
+.layer:first-child .layer-label { color: #2a5a3a; }
+.layer:first-child .tbl { border-color: #1a3a2a; }
+.layer:first-child .tbl-head { border-bottom-color: #1a3a2a; }
+.layer:first-child .tbl-name::after {
+  content: ' NEW';
+  font-size: 8px;
+  font-weight: 700;
+  color: #2d9e5f;
+  letter-spacing: .1em;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.layer:last-child .layer-label { color: #333; }
+.layer:last-child .tbl { background: #0a0a0a; border-color: #141414; }
+.layer:last-child .tbl-name { color: #585858; }
+.layer:last-child .tbl-name::after {
+  content: ' EXISTING';
+  font-size: 8px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: .1em;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.layer { margin-bottom: 6px; }
+
+/* Table grid per layer */
+.layer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+
+/* Connector between layers */
+.connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  color: var(--dimmer);
+  font-size: 10px;
+  gap: 10px;
+  position: relative;
+}
+.connector::before, .connector::after {
+  content: '';
+  flex: 1;
+  border-top: 1px dashed var(--dimmer);
+}
+.connector-label { white-space: nowrap; }
+.connector.active-flow { color: #3b7dd8; }
+.connector.active-flow::before, .connector.active-flow::after { border-color: #3b7dd8; animation: dash 1s linear infinite; }
+
+@keyframes dash {
+  to { stroke-dashoffset: -10; }
+}
+
+/* Table card */
+.tbl {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.tbl.highlight { border-color: var(--progress); }
+
+.tbl-head {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.tbl-name { font-weight: 600; color: #e0e0e0; font-size: 11px; }
+.tbl-role { font-size: 9px; color: var(--dim); margin-left: auto; text-transform: uppercase; letter-spacing: .06em; }
+
+.tbl-body {
+  padding: 8px 12px;
+  min-height: 90px;
+}
+
+.empty { color: var(--dimmer); font-size: 10px; }
+
+/* Data rows inside tables */
+.row {
+  display: flex;
+  gap: 12px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  animation: fadeIn .2s ease;
+  align-items: center;
+}
+.row:last-child { border-bottom: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cell-id    { color: var(--dim); width: 40px; flex-shrink: 0; }
+.cell-phone { color: var(--text); width: 95px; flex-shrink: 0; }
+.cell-lead  { color: var(--dim); width: 60px; flex-shrink: 0; }
+.cell-info  { color: var(--dim); flex: 1; }
+.cell-uuid  { width: 70px; flex-shrink: 0; }
+.cell-ans   { width: 90px; flex-shrink: 0; }
+
+/* Status chip */
+.chip {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.chip-pending   { color: var(--pending);   border-color: var(--pending); }
+.chip-progress  { color: #5a9de8;          border-color: #3b7dd8; }
+.chip-completed { color: #4dbf7f;          border-color: var(--completed); }
+.chip-scheduled { color: #3ab5c5;          border-color: var(--scheduled); }
+.chip-skipped   { color: #c0a030;          border-color: var(--skipped); }
+.chip-error     { color: #e05545;          border-color: var(--error); }
+
+/* ── SCHEMA ── */
+.schema-section {
+  max-width: 1020px;
+  margin: 44px auto 0;
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+}
+
+.schema-title {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--dim);
+  margin-bottom: 14px;
+}
+
+.schema-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+
+.schema-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+}
+
+.s-tbl-name {
+  font-weight: 600;
+  color: #e0e0e0;
+  font-size: 11px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.s-existing { font-size: 9px; font-weight: 400; color: var(--dim); }
+
+.s-field {
+  display: grid;
+  grid-template-columns: 165px 110px 1fr;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.s-field:last-child { border-bottom: none; }
+
+.s-fname { color: var(--text); }
+.s-ftype { color: #7a5fc0; }
+.s-fnote { color: var(--dim); }
+
+/* ── STATUS LEGEND ── */
+.legend {
+  max-width: 1020px;
+  margin: 28px auto 0;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--dim);
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>Callback Batch — Architecture</h1>
+  <p>4 tablas · 2 crons · trazabilidad por entidad</p>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="steps">
+    <div class="step" id="s1">
+      <div class="step-num">01</div>
+      <div class="step-desc">
+        <div class="step-title">Usuario crea batch</div>
+        <div class="step-sub">UI → callback_scheduled + entities</div>
+      </div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step" id="s2">
+      <div class="step-num">02</div>
+      <div class="step-desc">
+        <div class="step-title">Batch cron ejecuta</div>
+        <div class="step-sub">encola leads en callback_requests</div>
+      </div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step" id="s3">
+      <div class="step-num">03</div>
+      <div class="step-desc">
+        <div class="step-title">Execution cron llama</div>
+        <div class="step-sub">autocall → archiva en callback_executed</div>
+      </div>
+    </div>
+    <div class="step-spacer"></div>
+    <button class="btn-next" id="btn-next" onclick="nextStep()">▶ Ejecutar paso 01</button>
+    <button class="btn btn-reset" onclick="reset()">reset</button>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div class="pipeline">
+
+  <!-- Layer 1: orchestration -->
+  <div class="layer">
+    <div class="layer-label">✦ nuevo — batch layer</div>
+    <div class="layer-grid">
+      <div class="tbl" id="card-sched">
+        <div class="tbl-head">
+          <span class="tbl-name">callback_scheduled</span>
+          <span class="tbl-role">batch header</span>
+        </div>
+        <div class="tbl-body" id="body-sched">
+          <div class="empty">— vacía</div>
+        </div>
+      </div>
+      <div class="tbl" id="card-ent">
+        <div class="tbl-head">
+          <span class="tbl-name">callback_entities_treated</span>
+          <span class="tbl-role">por entidad</span>
+        </div>
+        <div class="tbl-body" id="body-ent">
+          <div class="empty">— vacía</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector -->
+  <div class="connector" id="connector">
+    <span class="connector-label">batch cron → LeadCallbackApiService::schedule()</span>
+  </div>
+
+  <!-- Layer 2: execution -->
+  <div class="layer">
+    <div class="layer-label">existente — execution layer (sin cambios)</div>
+    <div class="layer-grid">
+      <div class="tbl" id="card-req">
+        <div class="tbl-head">
+          <span class="tbl-name">callback_requests</span>
+          <span class="tbl-role">cola · cr_uuid = estado</span>
+        </div>
+        <div class="tbl-body" id="body-req">
+          <div class="empty">— vacía</div>
+        </div>
+      </div>
+      <div class="tbl" id="card-exec">
+        <div class="tbl-head">
+          <span class="tbl-name">callback_executed</span>
+          <span class="tbl-role">archivo</span>
+        </div>
+        <div class="tbl-body" id="body-exec">
+          <div class="empty">— vacía</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><span class="chip chip-pending">pending</span> sin procesar</div>
+  <div class="legend-item"><span class="chip chip-progress">in_progress</span> cron activo</div>
+  <div class="legend-item"><span class="chip chip-scheduled">scheduled</span> en cola</div>
+  <div class="legend-item"><span class="chip chip-skipped">skipped</span> descartado por regla</div>
+  <div class="legend-item"><span class="chip chip-error">error</span> fallo inesperado</div>
+  <div class="legend-item"><span class="chip chip-completed">completed</span> terminado</div>
+</div>
+
+<!-- SCHEMA -->
+<div class="schema-section">
+  <div class="schema-title">Schema</div>
+  <div class="schema-grid">
+
+    <div class="schema-card">
+      <div class="s-tbl-name">callback_scheduled</div>
+      <div class="s-field"><span class="s-fname">cs_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
+      <div class="s-field"><span class="s-fname">cs_retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
+      <div class="s-field"><span class="s-fname">cs_user_id</span><span class="s-ftype">INT NOT NULL</span><span class="s-fnote">quién creó el batch</span></div>
+      <div class="s-field"><span class="s-fname">cs_did</span><span class="s-ftype">VARCHAR(20)</span><span class="s-fnote">DID saliente, requerido</span></div>
+      <div class="s-field"><span class="s-fname">cs_queue_id</span><span class="s-ftype">INT</span><span class="s-fnote">default 0</span></div>
+      <div class="s-field"><span class="s-fname">cs_source</span><span class="s-ftype">VARCHAR(50)</span><span class="s-fnote">origen: ui | api | automation</span></div>
+      <div class="s-field"><span class="s-fname">cs_priority</span><span class="s-ftype">INT</span><span class="s-fnote">default 0 — orden entre batches (mayor = antes)</span></div>
+      <div class="s-field"><span class="s-fname">cs_status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|in_progress|completed|error</span></div>
+      <div class="s-field"><span class="s-fname">cs_started_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
+      <div class="s-field"><span class="s-fname">cs_completed_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
+      <div class="s-field"><span class="s-fname">created_at / updated_at</span><span class="s-ftype">TIMESTAMP</span><span class="s-fnote">—</span></div>
+    </div>
+
+    <div class="schema-card">
+      <div class="s-tbl-name">callback_entities_treated</div>
+      <div class="s-field"><span class="s-fname">cet_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
+      <div class="s-field"><span class="s-fname">cet_scheduled_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">→ callback_scheduled.cs_id</span></div>
+      <div class="s-field"><span class="s-fname">cet_entity_id</span><span class="s-ftype">INT</span><span class="s-fnote">lead ID</span></div>
+      <div class="s-field"><span class="s-fname">cet_entity_type</span><span class="s-ftype">ENUM('lead')</span><span class="s-fnote">extensible</span></div>
+      <div class="s-field"><span class="s-fname">cet_status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|scheduled|completed|skipped|error</span></div>
+      <div class="s-field"><span class="s-fname">cet_reason</span><span class="s-ftype">VARCHAR(100)</span><span class="s-fnote">nullable — skipped + error</span></div>
+      <div class="s-field"><span class="s-fname">cet_callback_request_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">nullable → callback_requests.cr_id</span></div>
+      <div class="s-field"><span class="s-fname">created_at / updated_at</span><span class="s-ftype">TIMESTAMP</span><span class="s-fnote">—</span></div>
+    </div>
+
+    <div class="schema-card">
+      <div class="s-tbl-name">callback_requests <span class="s-existing">existente</span></div>
+      <div class="s-field"><span class="s-fname">cr_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">—</span></div>
+      <div class="s-field"><span class="s-fname">cr_retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
+      <div class="s-field"><span class="s-fname">cr_target_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">DID saliente — quien llama (from)</span></div>
+      <div class="s-field"><span class="s-fname">cr_callback_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">teléfono del lead — a quien se llama (to)</span></div>
+      <div class="s-field"><span class="s-fname">cr_uuid</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">NULL=pendiente / valor=ejecutado</span></div>
+      <div class="s-field"><span class="s-fname">cr_queue_id</span><span class="s-ftype">INT</span><span class="s-fnote">0 = sin cola</span></div>
+      <div class="s-field"><span class="s-fname">cr_entity_id</span><span class="s-ftype">INT</span><span class="s-fnote">lead ID</span></div>
+      <div class="s-field"><span class="s-fname">cr_source</span><span class="s-ftype">VARCHAR(50)</span><span class="s-fnote">origen — 'batch', 'automation'</span></div>
+      <div class="s-field"><span class="s-fname">cr_lead_source</span><span class="s-ftype">VARCHAR(50)</span><span class="s-fnote">nullable — sub-fuente del lead para filtro de segmento</span></div>
+    </div>
+
+    <div class="schema-card">
+      <div class="s-tbl-name">callback_executed <span class="s-existing">existente</span></div>
+      <div class="s-field"><span class="s-fname">ce_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">—</span></div>
+      <div class="s-field"><span class="s-fname">ce_retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
+      <div class="s-field"><span class="s-fname">ce_uuid</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">UUID del autocall</span></div>
+      <div class="s-field"><span class="s-fname">ce_target_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">DID saliente — quien llama (from)</span></div>
+      <div class="s-field"><span class="s-fname">ce_callback_number</span><span class="s-ftype">VARCHAR</span><span class="s-fnote">teléfono del lead — a quien se llama (to)</span></div>
+      <div class="s-field"><span class="s-fname">answer_state</span><span class="s-ftype">ENUM</span><span class="s-fnote">answered | not_answered | busy | ...</span></div>
+      <div class="s-field"><span class="s-fname">start_epoch</span><span class="s-ftype">INT</span><span class="s-fnote">timestamp inicio llamada</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const ENTITIES = [
+  { id: 4821, phone: '+5491155550021', outcome: 'scheduled' },
+  { id: 4822, phone: '+5491155550034', outcome: 'scheduled' },
+  { id: 4823, phone: '+5491155550089', outcome: 'skipped',  reason: 'touch_limit_reached' },
+  { id: 4824, phone: '+5491155550012', outcome: 'error',    reason: 'lead_not_found' },
+  { id: 4825, phone: '+5491155550067', outcome: 'scheduled' },
+];
+
+const ANSWERS = ['answered', 'not_answered', 'answered'];
+
+let step = 0;
+let crBase = 9340;
+let running = false;
+
+const chip = (type, label) =>
+  `<span class="chip chip-${type}">${label ?? type}</span>`;
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+window.onload = () => setStepUI(1);
+
+function highlight(id, on) {
+  document.getElementById(id).classList.toggle('highlight', on);
+}
+
+function setStepUI(active) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById(`s${i}`);
+    el.classList.remove('active', 'done');
+    if (i < active) el.classList.add('done');
+    if (i === active) el.classList.add('active');
+  }
+  const labels = [
+    null,
+    '▶ Ejecutar paso 01',
+    '▶ Ejecutar paso 02',
+    '▶ Ejecutar paso 03',
+    '✓ Demo completa',
+  ];
+  const btn = document.getElementById('btn-next');
+  btn.textContent = labels[active] ?? '✓ Demo completa';
+  btn.disabled = active > 3;
+}
+
+function nextStep() {
+  if (running) return;
+  if (step === 0) step1();
+  else if (step === 1) step2();
+  else if (step === 2) step3();
+}
+
+function reset() {
+  step = 0; crBase = 9340; running = false;
+  ['body-sched','body-ent','body-req','body-exec'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="empty">— vacía</div>';
+  });
+  ['card-sched','card-ent','card-req','card-exec'].forEach(id => highlight(id, false));
+  document.getElementById('connector').classList.remove('active-flow');
+  document.getElementById('btn-next').disabled = false;
+  setStepUI(1);
+}
+
+function step1() {
+  if (step !== 0) return;
+  step = 1;
+  setStepUI(2);
+  highlight('card-sched', true);
+  highlight('card-ent', true);
+
+  document.getElementById('body-sched').innerHTML = `
+    <div class="row">
+      <span class="cell-id">#1</span>
+      <span>${chip('pending')}</span>
+      <span class="cell-info">user:42 · did:+549110000 · queue:0 · source:ui · priority:0</span>
+    </div>`;
+
+  document.getElementById('body-ent').innerHTML = ENTITIES.map((e, i) => `
+    <div class="row" id="ent-${i}">
+      <span class="cell-id">#${e.id}</span>
+      <span class="cell-lead">lead</span>
+      <span>${chip('pending')}</span>
+      <span class="cell-info">—</span>
+    </div>`).join('');
+
+}
+
+async function step2() {
+  if (step !== 1) return;
+  step = 2; running = true;
+  document.getElementById('btn-next').disabled = true;
+  document.getElementById('connector').classList.add('active-flow');
+  highlight('card-req', true);
+
+  // in_progress
+  document.getElementById('body-sched').innerHTML = `
+    <div class="row">
+      <span class="cell-id">#1</span>
+      <span>${chip('progress', 'in_progress')}</span>
+      <span class="cell-info">started: 10:00:01</span>
+    </div>`;
+
+  document.getElementById('body-req').innerHTML = '';
+
+  let scheduled = 0;
+
+  for (let i = 0; i < ENTITIES.length; i++) {
+    await sleep(550);
+    const e = ENTITIES[i];
+    const row = document.getElementById(`ent-${i}`);
+
+    if (e.outcome === 'scheduled') {
+      const crId = crBase + scheduled;
+      row.innerHTML = `
+        <span class="cell-id">#${e.id}</span>
+        <span class="cell-lead">lead</span>
+        <span>${chip('scheduled')}</span>
+        <span class="cell-info">cr_id:#${crId}</span>`;
+
+      const rBody = document.getElementById('body-req');
+      if (rBody.querySelector('.empty')) rBody.innerHTML = '';
+      rBody.innerHTML += `
+        <div class="row" id="req-${crId}">
+          <span class="cell-id">#${crId}</span>
+          <span class="cell-phone">${e.phone}</span>
+          <span class="cell-uuid" style="color:var(--dim)">uuid:NULL</span>
+          <span class="cell-info">lead #${e.id}</span>
+        </div>`;
+      scheduled++;
+
+    } else if (e.outcome === 'skipped') {
+      row.innerHTML = `
+        <span class="cell-id">#${e.id}</span>
+        <span class="cell-lead">lead</span>
+        <span>${chip('skipped')}</span>
+        <span class="cell-info">${e.reason}</span>`;
+
+    } else {
+      row.innerHTML = `
+        <span class="cell-id">#${e.id}</span>
+        <span class="cell-lead">lead</span>
+        <span>${chip('error')}</span>
+        <span class="cell-info">${e.reason}</span>`;
+    }
+  }
+
+  await sleep(400);
+  document.getElementById('connector').classList.remove('active-flow');
+
+  document.getElementById('body-sched').innerHTML = `
+    <div class="row">
+      <span class="cell-id">#1</span>
+      <span>${chip('completed')}</span>
+      <span class="cell-info">10:00:01 → 10:00:04</span>
+    </div>
+    <div class="row">
+      <span class="cell-id"></span>
+      <span class="cell-info" style="color:var(--dim)">${scheduled} scheduled · 1 skipped · 1 error</span>
+    </div>`;
+
+  running = false;
+  setStepUI(3);
+  document.getElementById('btn-next').disabled = false;
+}
+
+async function step3() {
+  if (step !== 2) return;
+  step = 3; running = true;
+  document.getElementById('btn-next').disabled = true;
+  highlight('card-exec', true);
+
+  document.getElementById('body-exec').innerHTML = '';
+
+  const scheduled = ENTITIES.filter(e => e.outcome === 'scheduled');
+
+  for (let i = 0; i < scheduled.length; i++) {
+    await sleep(700);
+    const e = scheduled[i];
+    const crId = crBase + i;
+    const req = document.getElementById(`req-${crId}`);
+    const uuid = 'uuid-' + Math.random().toString(36).slice(2,9);
+    const ans = ANSWERS[i] ?? 'not_answered';
+
+    // mark uuid set
+    if (req) req.innerHTML = `
+      <span class="cell-id">#${crId}</span>
+      <span class="cell-phone">${e.phone}</span>
+      <span class="cell-uuid" style="color:var(--completed)">uuid:✓</span>
+      <span class="cell-info" style="color:var(--dim)">archivando…</span>`;
+
+    await sleep(300);
+
+    // archive
+    const eBody = document.getElementById('body-exec');
+    if (eBody.querySelector('.empty')) eBody.innerHTML = '';
+    eBody.innerHTML += `
+      <div class="row">
+        <span class="cell-id">#${crId}</span>
+        <span class="cell-phone">${e.phone}</span>
+        <span class="cell-ans" style="color:${ans === 'answered' ? 'var(--completed)' : 'var(--dim)'}">${ans}</span>
+        <span class="cell-info" style="color:var(--dim)">${uuid}</span>
+      </div>`;
+
+    // fade out from requests
+    if (req) { req.style.opacity = '.25'; req.style.transition = 'opacity .4s'; }
+  }
+
+  await sleep(500);
+  document.getElementById('body-req').innerHTML = '<div class="empty">— archivado, tabla vacía</div>';
+  running = false;
+  setStepUI(4);
+}
+</script>
+</body>
+</html>

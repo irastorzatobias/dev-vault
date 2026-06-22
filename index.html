@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dev Vault</title>
+<style>
+:root {
+  --bg: #080808;
+  --surface: #0f0f0f;
+  --border: #1a1a1a;
+  --border2: #242424;
+  --text: #c8c8c8;
+  --dim: #4a4a4a;
+  --dimmer: #2a2a2a;
+  --mono: 'SF Mono','Cascadia Code','Consolas','Monaco',monospace;
+
+  --draft:       #4a4a4a;
+  --en-discusion:#8a7022;
+  --en-progreso: #1a5a8a;
+  --en-revision: #8a5a1a;
+  --publicado:   #2d9e5f;
+  --archivado:   #2a2a2a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 48px 32px 80px;
+}
+
+.wrap { max-width: 860px; margin: 0 auto; }
+
+.hdr {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.hdr h1 { font-size: 13px; font-weight: 600; color: #e0e0e0; letter-spacing: .08em; text-transform: uppercase; }
+.hdr p { font-size: 10px; color: var(--dim); }
+
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--dim);
+  padding: 5px 11px;
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: all .15s;
+}
+.filter-btn:hover, .filter-btn.active { border-color: #5a9de8; color: #7ab3f0; }
+
+.domain-group { margin-bottom: 28px; }
+.domain-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--dimmer);
+  margin-bottom: 8px;
+}
+
+.doc-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  padding: 14px 16px;
+  margin-bottom: 2px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s, background .15s;
+}
+.doc-card:hover { background: #111; border-color: var(--border2); }
+.doc-card.status-draft        { border-left-color: var(--draft); }
+.doc-card.status-en-discusion { border-left-color: #c0a030; }
+.doc-card.status-en-progreso  { border-left-color: #3b7dd8; }
+.doc-card.status-en-revision  { border-left-color: #d08030; }
+.doc-card.status-publicado    { border-left-color: var(--publicado); }
+.doc-card.status-archivado    { opacity: .4; border-left-color: var(--archivado); }
+
+.doc-title { font-weight: 600; font-size: 12px; color: #e0e0e0; margin-bottom: 3px; }
+.doc-desc  { font-size: 10px; color: var(--dim); }
+.doc-meta  { font-size: 9px; color: var(--dimmer); margin-top: 6px; }
+
+.doc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.badge-draft        { color: #666;    border-color: var(--draft); }
+.badge-en-discusion { color: #c0a030; border-color: #8a7022; }
+.badge-en-progreso  { color: #5a9de8; border-color: #1a5a8a; }
+.badge-en-revision  { color: #d08030; border-color: #8a5a1a; }
+.badge-publicado    { color: #4dbf7f; border-color: var(--publicado); }
+.badge-archivado    { color: #444;    border-color: var(--archivado); }
+
+.doc-author { font-size: 9px; color: var(--dimmer); }
+
+.empty { color: var(--dimmer); font-size: 11px; padding: 24px 0; }
+
+.legend {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 9px;
+  color: var(--dim);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+
+.add-hint {
+  margin-top: 24px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border2);
+  font-size: 10px;
+  color: var(--dimmer);
+  line-height: 1.8;
+}
+.add-hint code { color: #5a9de8; background: #0c0c0c; padding: 1px 4px; border: 1px solid var(--border2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <h1>Dev Vault</h1>
+    <p>diagramas técnicos · flujos · decisiones de arquitectura</p>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">todos</button>
+  </div>
+
+  <div id="docs-container"></div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="badge badge-draft">draft</span> borrador inicial</div>
+    <div class="legend-item"><span class="badge badge-en-discusion">en discusión</span> decisiones abiertas</div>
+    <div class="legend-item"><span class="badge badge-en-progreso">en progreso</span> desarrollo activo</div>
+    <div class="legend-item"><span class="badge badge-en-revision">en revisión</span> listo para review</div>
+    <div class="legend-item"><span class="badge badge-publicado">publicado</span> aprobado</div>
+  </div>
+
+  <div class="add-hint">
+    Para agregar un doc: subí el <code>.html</code> al repo, actualizá <code>manifest.json</code> y hacé push a <code>main</code>.
+  </div>
+
+</div>
+
+<script>
+let currentFilter = 'all';
+
+fetch('manifest.json')
+  .then(r => r.json())
+  .then(docs => {
+    buildFilters(docs);
+    render(docs);
+  });
+
+function buildFilters(docs) {
+  const domains = [...new Set(docs.map(d => d.domain))];
+  const container = document.getElementById('filters');
+  domains.forEach(domain => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.filter = domain;
+    btn.textContent = domain.toLowerCase();
+    btn.onclick = () => setFilter(domain, btn);
+    container.appendChild(btn);
+  });
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  fetch('manifest.json').then(r => r.json()).then(render);
+}
+
+function render(docs) {
+  const filtered = currentFilter === 'all' ? docs : docs.filter(d => d.domain === currentFilter);
+  const container = document.getElementById('docs-container');
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty">— sin documentos</div>';
+    return;
+  }
+
+  const byDomain = filtered.reduce((acc, d) => {
+    (acc[d.domain] = acc[d.domain] || []).push(d);
+    return acc;
+  }, {});
+
+  container.innerHTML = Object.entries(byDomain).map(([domain, items]) => `
+    <div class="domain-group">
+      <div class="domain-label">${domain}</div>
+      ${items.map(doc => `
+        <a class="doc-card status-${doc.status}" href="${doc.file}">
+          <div>
+            <div class="doc-title">${doc.title}</div>
+            <div class="doc-desc">${doc.description}</div>
+            <div class="doc-meta">${doc.updated}</div>
+          </div>
+          <div class="doc-right">
+            <span class="badge badge-${doc.status}">${doc.status.replace('-', ' ')}</span>
+            <span class="doc-author">${doc.author}</span>
+          </div>
+        </a>`).join('')}
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
