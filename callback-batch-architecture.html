@@ -6,14 +6,14 @@
 <title>Callback Batch — System Architecture</title>
 <style>
 :root {
-  --bg: #080808;
-  --surface: #0f0f0f;
-  --surface2: #141414;
-  --border: #1a1a1a;
-  --border2: #242424;
-  --text: #c8c8c8;
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface2: #111;
+  --border: #161616;
+  --border2: #202020;
+  --text: #d0d0d0;
   --dim: #4a4a4a;
-  --dimmer: #2a2a2a;
+  --dimmer: #252525;
 
   --pending:    #4a4a4a;
   --progress:   #3b7dd8;
@@ -24,6 +24,8 @@
   --scheduled:  #1a7a8a;
 
   --mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, 'Inter', BlinkMacSystemFont, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,14 +34,14 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
-  padding: 40px 32px 80px;
+  padding: 48px 40px 100px;
 }
 
 /* ── HEADER ── */
 .hdr {
-  max-width: 1020px;
+  max-width: min(1440px, 96vw);
   margin: 0 auto 36px;
   display: flex;
   align-items: baseline;
@@ -47,12 +49,12 @@ body {
   border-bottom: 1px solid var(--border);
   padding-bottom: 16px;
 }
-.hdr h1 { font-size: 12px; font-weight: 600; color: #e0e0e0; letter-spacing: .08em; text-transform: uppercase; }
-.hdr p  { font-size: 10px; color: var(--dim); }
+.hdr h1 { font-family: var(--serif); font-size: 22px; font-weight: 400; color: #e8e8e8; letter-spacing: -.01em; text-transform: none; }
+.hdr p  { font-size: 12px; color: var(--dim); font-family: var(--sans); }
 
 /* ── CONTROLS ── */
 .controls {
-  max-width: 1020px;
+  max-width: min(1440px, 96vw);
   margin: 0 auto 24px;
 }
 
@@ -84,8 +86,8 @@ body {
 .step.active .step-num { color: #5a9de8; }
 .step.done   .step-num { color: var(--completed); }
 
-.step-title { font-size: 11px; font-weight: 600; color: #e0e0e0; }
-.step-sub   { font-size: 9px; color: var(--dim); margin-top: 1px; }
+.step-title { font-size: 13px; font-weight: 600; color: #e0e0e0; font-family: var(--sans); }
+.step-sub   { font-size: 11px; color: var(--dim); margin-top: 1px; font-family: var(--sans); }
 
 .step-arrow { color: var(--dimmer); font-size: 14px; flex-shrink: 0; }
 
@@ -95,9 +97,9 @@ body {
   background: #1e3a5f;
   border: 1px solid #3b7dd8;
   color: #7ab3f0;
-  padding: 10px 20px;
-  font-family: var(--mono);
-  font-size: 11px;
+  padding: 12px 24px;
+  font-family: var(--sans);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   letter-spacing: .05em;
@@ -124,17 +126,18 @@ body {
 
 /* ── PIPELINE ── */
 .pipeline {
-  max-width: 1020px;
+  max-width: min(1440px, 96vw);
   margin: 0 auto;
 }
 
 /* Layer labels */
 .layer-label {
-  font-size: 9px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .1em;
   color: var(--dimmer);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-family: var(--sans);
 }
 .layer:first-child .layer-label { color: #2a5a3a; }
 .layer:first-child .tbl { border-color: #1a3a2a; }
@@ -208,23 +211,23 @@ body {
   border-bottom: 1px solid var(--border);
   gap: 10px;
 }
-.tbl-name { font-weight: 600; color: #e0e0e0; font-size: 11px; }
-.tbl-role { font-size: 9px; color: var(--dim); margin-left: auto; text-transform: uppercase; letter-spacing: .06em; }
+.tbl-name { font-weight: 600; color: #e0e0e0; font-size: 13px; font-family: var(--mono); }
+.tbl-role { font-size: 11px; color: var(--dim); margin-left: auto; text-transform: uppercase; letter-spacing: .06em; font-family: var(--sans); }
 
 .tbl-body {
   padding: 8px 12px;
   min-height: 90px;
 }
 
-.empty { color: var(--dimmer); font-size: 10px; }
+.empty { color: var(--dimmer); font-size: 12px; }
 
 /* Data rows inside tables */
 .row {
   display: flex;
   gap: 12px;
-  padding: 3px 0;
+  padding: 5px 0;
   border-bottom: 1px solid var(--border);
-  font-size: 10px;
+  font-size: 12px;
   animation: fadeIn .2s ease;
   align-items: center;
 }
@@ -245,12 +248,13 @@ body {
 /* Status chip */
 .chip {
   display: inline-block;
-  padding: 1px 5px;
-  font-size: 9px;
+  padding: 2px 7px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: .05em;
+  letter-spacing: .04em;
   border: 1px solid;
   white-space: nowrap;
+  font-family: var(--sans);
 }
 .chip-pending   { color: var(--pending);   border-color: var(--pending); }
 .chip-progress  { color: #5a9de8;          border-color: #3b7dd8; }
@@ -261,18 +265,19 @@ body {
 
 /* ── SCHEMA ── */
 .schema-section {
-  max-width: 1020px;
+  max-width: min(1440px, 96vw);
   margin: 44px auto 0;
   border-top: 1px solid var(--border);
   padding-top: 24px;
 }
 
 .schema-title {
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .1em;
   color: var(--dim);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  font-family: var(--sans);
 }
 
 .schema-grid {
@@ -284,37 +289,37 @@ body {
 .schema-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  padding: 12px 14px;
+  padding: 18px 20px;
 }
 
 .s-tbl-name {
   font-weight: 600;
   color: #e0e0e0;
-  font-size: 11px;
-  margin-bottom: 10px;
+  font-size: 14px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.s-existing { font-size: 9px; font-weight: 400; color: var(--dim); }
+.s-existing { font-size: 11px; font-weight: 400; color: var(--dim); font-family: var(--sans); }
 
 .s-field {
   display: grid;
-  grid-template-columns: 165px 110px 1fr;
-  gap: 6px;
-  padding: 2px 0;
-  font-size: 10px;
+  grid-template-columns: 190px 130px 1fr;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 12px;
   border-bottom: 1px solid var(--border);
 }
 .s-field:last-child { border-bottom: none; }
 
 .s-fname { color: var(--text); }
-.s-ftype { color: #7a5fc0; }
-.s-fnote { color: var(--dim); }
+.s-ftype { color: #9a7fe0; }
+.s-fnote { color: var(--dim); font-family: var(--sans); }
 
 /* ── STATUS LEGEND ── */
 .legend {
-  max-width: 1020px;
+  max-width: min(1440px, 96vw);
   margin: 28px auto 0;
   display: flex;
   gap: 16px;
