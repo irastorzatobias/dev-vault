@@ -445,28 +445,28 @@ body {
 
     <div class="schema-card">
       <div class="s-tbl-name">callback_scheduled</div>
-      <div class="s-field"><span class="s-fname">cs_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
-      <div class="s-field"><span class="s-fname">cs_retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
-      <div class="s-field"><span class="s-fname">cs_user_id</span><span class="s-ftype">INT NOT NULL</span><span class="s-fnote">quién creó el batch</span></div>
-      <div class="s-field"><span class="s-fname">cs_did</span><span class="s-ftype">VARCHAR(20)</span><span class="s-fnote">DID saliente, requerido</span></div>
-      <div class="s-field"><span class="s-fname">cs_queue_id</span><span class="s-ftype">INT</span><span class="s-fnote">default 0</span></div>
-      <div class="s-field"><span class="s-fname">cs_source</span><span class="s-ftype">VARCHAR(50)</span><span class="s-fnote">origen: ui | api | automation</span></div>
-      <div class="s-field"><span class="s-fname">cs_priority</span><span class="s-ftype">INT</span><span class="s-fnote">default 0 — orden entre batches (mayor = antes)</span></div>
-      <div class="s-field"><span class="s-fname">cs_status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|in_progress|completed|error</span></div>
-      <div class="s-field"><span class="s-fname">cs_started_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
-      <div class="s-field"><span class="s-fname">cs_completed_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
+      <div class="s-field"><span class="s-fname">id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
+      <div class="s-field"><span class="s-fname">retail_id</span><span class="s-ftype">INT</span><span class="s-fnote">empresa</span></div>
+      <div class="s-field"><span class="s-fname">user_id</span><span class="s-ftype">INT NOT NULL</span><span class="s-fnote">quién creó el batch</span></div>
+      <div class="s-field"><span class="s-fname">did</span><span class="s-ftype">VARCHAR(20)</span><span class="s-fnote">DID saliente, requerido</span></div>
+      <div class="s-field"><span class="s-fname">queue_id</span><span class="s-ftype">INT</span><span class="s-fnote">default 0</span></div>
+      <div class="s-field"><span class="s-fname">source</span><span class="s-ftype">VARCHAR(50)</span><span class="s-fnote">origen: ui | api | automation</span></div>
+      <div class="s-field"><span class="s-fname">priority</span><span class="s-ftype">INT</span><span class="s-fnote">default 0 — orden entre batches (mayor = antes)</span></div>
+      <div class="s-field"><span class="s-fname">status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|in_progress|completed|error</span></div>
+      <div class="s-field"><span class="s-fname">started_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
+      <div class="s-field"><span class="s-fname">completed_at</span><span class="s-ftype">DATETIME</span><span class="s-fnote">nullable</span></div>
       <div class="s-field"><span class="s-fname">created_at / updated_at</span><span class="s-ftype">TIMESTAMP</span><span class="s-fnote">—</span></div>
     </div>
 
     <div class="schema-card">
       <div class="s-tbl-name">callback_entities_treated</div>
-      <div class="s-field"><span class="s-fname">cet_id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
-      <div class="s-field"><span class="s-fname">cet_scheduled_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">→ callback_scheduled.cs_id</span></div>
-      <div class="s-field"><span class="s-fname">cet_entity_id</span><span class="s-ftype">INT</span><span class="s-fnote">lead ID</span></div>
-      <div class="s-field"><span class="s-fname">cet_entity_type</span><span class="s-ftype">ENUM('lead')</span><span class="s-fnote">extensible</span></div>
-      <div class="s-field"><span class="s-fname">cet_status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|scheduled|completed|skipped|error</span></div>
-      <div class="s-field"><span class="s-fname">cet_reason</span><span class="s-ftype">VARCHAR(100)</span><span class="s-fnote">nullable — skipped + error</span></div>
-      <div class="s-field"><span class="s-fname">cet_callback_request_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">nullable → callback_requests.cr_id</span></div>
+      <div class="s-field"><span class="s-fname">id</span><span class="s-ftype">INT UNSIGNED PK</span><span class="s-fnote">auto_increment</span></div>
+      <div class="s-field"><span class="s-fname">scheduled_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">→ callback_scheduled.id</span></div>
+      <div class="s-field"><span class="s-fname">entity_id</span><span class="s-ftype">INT</span><span class="s-fnote">lead ID</span></div>
+      <div class="s-field"><span class="s-fname">entity_type</span><span class="s-ftype">ENUM('lead')</span><span class="s-fnote">extensible</span></div>
+      <div class="s-field"><span class="s-fname">status</span><span class="s-ftype">ENUM</span><span class="s-fnote">pending|scheduled|completed|skipped|error</span></div>
+      <div class="s-field"><span class="s-fname">reason</span><span class="s-ftype">VARCHAR(100)</span><span class="s-fnote">nullable — skipped + error</span></div>
+      <div class="s-field"><span class="s-fname">callback_request_id</span><span class="s-ftype">INT UNSIGNED</span><span class="s-fnote">nullable → callback_requests.cr_id</span></div>
       <div class="s-field"><span class="s-fname">created_at / updated_at</span><span class="s-ftype">TIMESTAMP</span><span class="s-fnote">—</span></div>
     </div>
 
