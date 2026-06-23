@@ -4,16 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Callback Batch — System Architecture</title>
-<link rel="stylesheet" href="tokens.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500;600;700&family=Red+Hat+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+:root {
+  --carbon:   #04040b;
+  --graphite: #121113;
+  --obsidian: #1a191b;
+  --basalt:   #2b292d;
+  --iron:     #323035;
+  --pewter:   #3c393f;
+  --steel:    #49474e;
+  --fog:      #7c7a85;
+  --silver:   #b5b2bc;
+  --ash:      #eeeef0;
+  --chalk:    #e5e5e5;
+  --signal:   #71d083;
+  --led:      #366740;
+  --moss:     #2d5736;
+  --forest:   #1d3a24;
+  --fern:     #1b2a1e;
+  --link-blue:#70b8ff;
+  --iris:     #473876;
+  --plum:     #291f43;
+  --lilac:    #baa7ff;
+  --shadow:   rgba(255,255,255,.06) 0 1px 0 0 inset;
+
+  --pending:   var(--steel);
+  --progress:  var(--iris);
+  --completed: var(--moss);
+  --error:     #7a1d18;
+  --skipped:   #4a3510;
+  --scheduled: #1a3a6a;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
+  background: var(--carbon);
+  color: var(--ash);
+  font-family: 'Red Hat Text', sans-serif;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.5;
+  letter-spacing: 0.025em;
   padding: 48px 40px 100px;
 }
 
@@ -24,11 +58,17 @@ body {
   display: flex;
   align-items: baseline;
   gap: 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--basalt);
   padding-bottom: 16px;
 }
-.hdr h1 { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--text); letter-spacing: -.01em; }
-.hdr p  { font-size: 12px; color: var(--dim); font-family: var(--sans); }
+.hdr h1 {
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--chalk);
+  letter-spacing: -0.025em;
+}
+.hdr p { font-size: 12px; color: var(--fog); }
 
 /* ── CONTROLS ── */
 .controls {
@@ -40,10 +80,11 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--graphite);
+  border: 1px solid var(--basalt);
+  border-radius: 6px;
   padding: 14px 16px;
-  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
 }
 
 .step {
@@ -57,50 +98,53 @@ body {
 .step.done   { opacity: .5; }
 
 .step-num {
+  font-family: 'Red Hat Display', sans-serif;
   font-size: 18px;
   font-weight: 600;
-  color: var(--dim);
+  color: var(--steel);
   min-width: 28px;
+  letter-spacing: -0.025em;
 }
-.step.active .step-num { color: var(--accent); }
-.step.done   .step-num { color: var(--accent); }
+.step.active .step-num { color: var(--signal); }
+.step.done   .step-num { color: var(--moss); }
 
-.step-title { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--sans); }
-.step-sub   { font-size: 11px; color: var(--dim); margin-top: 1px; font-family: var(--sans); }
+.step-title { font-size: 13px; font-weight: 600; color: var(--chalk); font-family: 'Red Hat Text', sans-serif; }
+.step-sub   { font-size: 11px; color: var(--fog); margin-top: 1px; font-family: 'Red Hat Mono', monospace; }
 
-.step-arrow { color: var(--dimmer); font-size: 14px; flex-shrink: 0; }
+.step-arrow { color: var(--iron); font-size: 14px; flex-shrink: 0; }
+
 .step-spacer { flex: 1; }
 
 .btn-next {
-  background: var(--accent);
-  border: none;
-  color: #132322;
-  padding: 12px 28px;
-  font-family: var(--sans);
+  background: var(--signal);
+  border: 1px solid var(--led);
+  color: var(--carbon);
+  padding: 10px 20px;
+  font-family: 'Red Hat Text', sans-serif;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  letter-spacing: .04em;
-  border-radius: var(--r-btn);
-  transition: filter .15s;
+  letter-spacing: 0.025em;
+  border-radius: 6px;
+  transition: background .15s;
   flex-shrink: 0;
 }
-.btn-next:hover:not(:disabled) { filter: brightness(1.08); }
-.btn-next:disabled { opacity: .3; cursor: not-allowed; }
+.btn-next:hover { background: #8de09a; }
+.btn-next:disabled { opacity: .25; cursor: not-allowed; }
 
 .btn {
   background: transparent;
-  border: 1px solid var(--border2);
-  color: var(--dim);
-  padding: 10px 20px;
-  font-family: var(--sans);
-  font-size: 11px;
+  border: 1px solid var(--basalt);
+  color: var(--fog);
+  padding: 10px 14px;
+  font-family: 'Red Hat Mono', monospace;
+  font-size: 10px;
   cursor: pointer;
-  letter-spacing: .04em;
-  border-radius: var(--r-btn);
+  letter-spacing: 0.04em;
+  border-radius: 6px;
   transition: border-color .15s, color .15s;
 }
-.btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn:hover:not(:disabled) { border-color: var(--pewter); color: var(--ash); }
 .btn:disabled { opacity: .25; cursor: not-allowed; }
 .btn-reset { flex-shrink: 0; }
 
@@ -110,34 +154,36 @@ body {
   margin: 0 auto;
 }
 
+/* Layer labels */
 .layer-label {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--dimmer);
+  color: var(--iron);
   margin-bottom: 8px;
-  font-family: var(--sans);
+  font-family: 'Red Hat Text', sans-serif;
+  font-weight: 500;
 }
-.layer:first-child .layer-label { color: rgba(61,220,145,.55); }
-.layer:first-child .tbl { border-color: #1d3a2a; }
-.layer:first-child .tbl-head { border-bottom-color: #1d3a2a; }
+.layer:first-child .layer-label { color: var(--moss); }
+.layer:first-child .tbl { border-color: var(--forest); }
+.layer:first-child .tbl-head { border-bottom-color: var(--forest); }
 .layer:first-child .tbl-name::after {
   content: ' NEW';
   font-size: 8px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--signal);
   letter-spacing: .1em;
   margin-left: 6px;
   vertical-align: middle;
 }
-.layer:last-child .layer-label { color: var(--dimmer); }
-.layer:last-child .tbl { background: var(--surface2); border-color: var(--border); }
-.layer:last-child .tbl-name { color: #585858; }
+.layer:last-child .layer-label { color: var(--iron); }
+.layer:last-child .tbl { background: var(--carbon); border-color: var(--basalt); }
+.layer:last-child .tbl-name { color: var(--steel); }
 .layer:last-child .tbl-name::after {
   content: ' EXISTING';
   font-size: 8px;
   font-weight: 600;
-  color: var(--dimmer);
+  color: var(--iron);
   letter-spacing: .1em;
   margin-left: 6px;
   vertical-align: middle;
@@ -145,31 +191,34 @@ body {
 
 .layer { margin-bottom: 6px; }
 
+/* Table grid per layer */
 .layer-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2px;
 }
 
+/* Connector between layers */
 .connector {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 28px;
-  color: var(--dimmer);
+  color: var(--iron);
   font-size: 10px;
+  font-family: 'Red Hat Mono', monospace;
   gap: 10px;
   position: relative;
 }
 .connector::before, .connector::after {
   content: '';
   flex: 1;
-  border-top: 1px dashed var(--dimmer);
+  border-top: 1px dashed var(--iron);
 }
 .connector-label { white-space: nowrap; }
-.connector.active-flow { color: var(--accent); }
+.connector.active-flow { color: var(--link-blue); }
 .connector.active-flow::before, .connector.active-flow::after {
-  border-color: var(--accent);
+  border-color: var(--link-blue);
   animation: dash 1s linear infinite;
 }
 
@@ -177,39 +226,53 @@ body {
   to { stroke-dashoffset: -10; }
 }
 
+/* Table card */
 .tbl {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-card);
+  background: var(--graphite);
+  border: 1px solid var(--basalt);
+  box-shadow: var(--shadow);
 }
-.tbl.highlight { border-color: var(--accent); }
+.tbl.highlight { border-color: var(--moss); }
 
 .tbl-head {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--basalt);
   gap: 10px;
 }
-.tbl-name { font-weight: 600; color: var(--text); font-size: 13px; font-family: var(--mono); }
-.tbl-role { font-size: 11px; color: var(--dim); margin-left: auto; text-transform: uppercase; letter-spacing: .06em; font-family: var(--sans); }
+.tbl-name {
+  font-weight: 600;
+  color: var(--chalk);
+  font-size: 13px;
+  font-family: 'Red Hat Mono', monospace;
+}
+.tbl-role {
+  font-size: 10px;
+  color: var(--fog);
+  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-family: 'Red Hat Text', sans-serif;
+}
 
 .tbl-body {
   padding: 8px 12px;
   min-height: 90px;
 }
 
-.empty { color: var(--dimmer); font-size: 12px; }
+.empty { color: var(--iron); font-size: 12px; font-family: 'Red Hat Mono', monospace; }
 
+/* Data rows inside tables */
 .row {
   display: flex;
   gap: 12px;
   padding: 5px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--basalt);
   font-size: 12px;
+  font-family: 'Red Hat Mono', monospace;
   animation: fadeIn .2s ease;
   align-items: center;
-  font-family: var(--mono);
 }
 .row:last-child { border-bottom: none; }
 
@@ -218,72 +281,79 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.cell-id    { color: var(--dim); width: 40px; flex-shrink: 0; }
-.cell-phone { color: var(--text); width: 95px; flex-shrink: 0; }
-.cell-lead  { color: var(--dim); width: 60px; flex-shrink: 0; }
-.cell-info  { color: var(--dim); flex: 1; }
+.cell-id    { color: var(--steel); width: 40px; flex-shrink: 0; }
+.cell-phone { color: var(--ash);   width: 95px; flex-shrink: 0; }
+.cell-lead  { color: var(--fog);   width: 60px; flex-shrink: 0; }
+.cell-info  { color: var(--fog);   flex: 1; }
 .cell-uuid  { width: 70px; flex-shrink: 0; }
 .cell-ans   { width: 90px; flex-shrink: 0; }
 
+/* Status chip */
 .chip {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 2px 7px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .04em;
   border: 1px solid;
+  border-radius: 2px;
   white-space: nowrap;
-  font-family: var(--sans);
-  border-radius: var(--r-sm);
+  font-family: 'Red Hat Text', sans-serif;
 }
-.chip-pending   { color: var(--dim);        border-color: var(--dimmer); }
-.chip-progress  { color: #5a9de8;           border-color: #3b7dd8; }
-.chip-completed { color: var(--accent);     border-color: var(--accent); }
-.chip-scheduled { color: var(--accent-dim); border-color: var(--accent-dim); }
-.chip-skipped   { color: #c9a43a;           border-color: #c9a43a; }
-.chip-error     { color: #e05545;           border-color: var(--error); }
+.chip-pending   { color: var(--fog);      border-color: var(--steel); }
+.chip-progress  { color: var(--link-blue);border-color: var(--iris); }
+.chip-completed { color: var(--signal);   border-color: var(--moss); }
+.chip-scheduled { color: var(--lilac);    border-color: var(--plum); }
+.chip-skipped   { color: #c0a030;         border-color: #8a7022; }
+.chip-error     { color: #e05545;         border-color: #7a1d18; }
 
 /* ── SCHEMA ── */
 .schema-section {
   max-width: min(1440px, 96vw);
   margin: 44px auto 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--basalt);
   padding-top: 24px;
 }
 
 .schema-title {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--dim);
+  color: var(--fog);
   margin-bottom: 16px;
-  font-family: var(--sans);
+  font-family: 'Red Hat Text', sans-serif;
+  font-weight: 500;
 }
 
 .schema-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 2px;
 }
 
 .schema-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--graphite);
+  border: 1px solid var(--basalt);
   padding: 18px 20px;
-  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
 }
 
 .s-tbl-name {
   font-weight: 600;
-  color: var(--text);
+  color: var(--chalk);
   font-size: 14px;
+  font-family: 'Red Hat Mono', monospace;
   margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--mono);
 }
-.s-existing { font-size: 11px; font-weight: 400; color: var(--dim); font-family: var(--sans); }
+.s-existing {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--fog);
+  font-family: 'Red Hat Text', sans-serif;
+}
 
 .s-field {
   display: grid;
@@ -291,14 +361,14 @@ body {
   gap: 10px;
   padding: 5px 0;
   font-size: 12px;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--mono);
+  font-family: 'Red Hat Mono', monospace;
+  border-bottom: 1px solid var(--basalt);
 }
 .s-field:last-child { border-bottom: none; }
 
-.s-fname { color: var(--text); }
-.s-ftype { color: #9a7fe0; }
-.s-fnote { color: var(--dim); font-family: var(--sans); }
+.s-fname { color: var(--ash); }
+.s-ftype { color: var(--lilac); }
+.s-fnote { color: var(--fog); font-family: 'Red Hat Text', sans-serif; }
 
 /* ── STATUS LEGEND ── */
 .legend {
@@ -313,8 +383,8 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 10px;
-  color: var(--dim);
-  font-family: var(--sans);
+  color: var(--fog);
+  font-family: 'Red Hat Text', sans-serif;
 }
 </style>
 </head>
@@ -611,7 +681,7 @@ async function step2() {
         <div class="row" id="req-${crId}">
           <span class="cell-id">#${crId}</span>
           <span class="cell-phone">${e.phone}</span>
-          <span class="cell-uuid" style="color:var(--dim)">uuid:NULL</span>
+          <span class="cell-uuid" style="color:var(--steel)">uuid:NULL</span>
           <span class="cell-info">lead #${e.id}</span>
         </div>`;
       scheduled++;
@@ -643,7 +713,7 @@ async function step2() {
     </div>
     <div class="row">
       <span class="cell-id"></span>
-      <span class="cell-info" style="color:var(--dim)">${scheduled} scheduled · 1 skipped · 1 error</span>
+      <span class="cell-info" style="color:var(--fog)">${scheduled} scheduled · 1 skipped · 1 error</span>
     </div>`;
 
   running = false;
@@ -673,8 +743,8 @@ async function step3() {
     if (req) req.innerHTML = `
       <span class="cell-id">#${crId}</span>
       <span class="cell-phone">${e.phone}</span>
-      <span class="cell-uuid" style="color:var(--completed)">uuid:✓</span>
-      <span class="cell-info" style="color:var(--dim)">archivando…</span>`;
+      <span class="cell-uuid" style="color:var(--signal)">uuid:✓</span>
+      <span class="cell-info" style="color:var(--fog)">archivando…</span>`;
 
     await sleep(300);
 
@@ -685,8 +755,8 @@ async function step3() {
       <div class="row">
         <span class="cell-id">#${crId}</span>
         <span class="cell-phone">${e.phone}</span>
-        <span class="cell-ans" style="color:${ans === 'answered' ? 'var(--completed)' : 'var(--dim)'}">${ans}</span>
-        <span class="cell-info" style="color:var(--dim)">${uuid}</span>
+        <span class="cell-ans" style="color:${ans === 'answered' ? 'var(--signal)' : 'var(--fog)'}">${ans}</span>
+        <span class="cell-info" style="color:var(--fog)">${uuid}</span>
       </div>`;
 
     // fade out from requests

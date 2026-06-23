@@ -4,183 +4,329 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dev Vault</title>
-<link rel="stylesheet" href="tokens.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500;600;700&family=Red+Hat+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --draft:       var(--dimmer);
-  --en-discusion:#c9a43a;
-  --en-progreso: #3b7dd8;
-  --en-revision: #d08030;
-  --publicado:   var(--accent);
-  --archivado:   var(--border2);
+  --carbon:   #04040b;
+  --graphite: #121113;
+  --obsidian: #1a191b;
+  --basalt:   #2b292d;
+  --iron:     #323035;
+  --pewter:   #3c393f;
+  --steel:    #49474e;
+  --fog:      #7c7a85;
+  --silver:   #b5b2bc;
+  --ash:      #eeeef0;
+  --chalk:    #e5e5e5;
+  --signal:   #71d083;
+  --led:      #366740;
+  --moss:     #2d5736;
+  --fern:     #1b2a1e;
+  --forest:   #1d3a24;
+  --link-blue:#70b8ff;
+  --iris:     #473876;
+  --plum:     #291f43;
+  --shadow:   rgba(255,255,255,.06) 0 1px 0 0 inset;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
-  color: var(--dim);
-  font-family: var(--sans);
-  font-size: 13px;
-  line-height: 1.6;
-  padding: 48px 32px 80px;
+  background: var(--carbon);
+  color: var(--ash);
+  font-family: 'Red Hat Text', -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0.025em;
+  padding: 48px 40px 80px;
 }
 
 .wrap { max-width: 1200px; margin: 0 auto; }
 
+/* ── HEADER ── */
 .hdr {
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 20px;
+  border-bottom: 1px solid var(--basalt);
+  padding-bottom: 24px;
   margin-bottom: 32px;
-  display: flex;
-  align-items: baseline;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
   gap: 16px;
 }
-.hdr h1 { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: .08em; text-transform: uppercase; }
-.hdr p  { font-size: 11px; color: var(--dim); }
+.hdr-left {}
+.hdr h1 {
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--chalk);
+  letter-spacing: -0.025em;
+  margin-bottom: 4px;
+}
+.hdr p { font-size: 12px; color: var(--fog); letter-spacing: 0.025em; }
+.hdr-meta { font-size: 10px; color: var(--steel); text-align: right; font-family: 'Red Hat Mono', monospace; }
 
-.filters {
+/* ── FILTERS ── */
+.filters-bar {
   display: flex;
+  align-items: center;
   gap: 6px;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
+}
+.filters-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--iron);
+  font-weight: 500;
+  margin-right: 4px;
 }
 .filter-btn {
   background: transparent;
-  border: 1px solid var(--border2);
-  color: var(--dim);
-  padding: 6px 16px;
-  font-family: var(--sans);
+  border: 1px solid var(--basalt);
+  color: var(--fog);
+  padding: 4px 12px;
+  font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  letter-spacing: .04em;
-  border-radius: var(--r-btn);
-  transition: all .15s;
+  letter-spacing: 0.025em;
+  border-radius: 2px;
+  transition: border-color .15s, color .15s;
 }
-.filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+.filter-btn:hover, .filter-btn.active { border-color: var(--signal); color: var(--signal); }
 
-.domain-group { margin-bottom: 28px; }
+/* ── DOMAIN GROUP ── */
+.domain-group { margin-bottom: 32px; }
 .domain-label {
   font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--dimmer);
+  letter-spacing: .12em;
+  color: var(--iron);
   margin-bottom: 8px;
-  font-family: var(--mono);
+  font-family: 'Red Hat Text', sans-serif;
+  font-weight: 500;
+  padding-left: 2px;
 }
 
-.doc-card {
+/* ── CARDS GRID ── */
+.cards-grid {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--border);
-  padding: 14px 20px;
-  margin-bottom: 4px;
+}
+@media (max-width: 768px) {
+  .cards-grid { grid-template-columns: 1fr; }
+}
+
+/* ── DOC CARD ── */
+.doc-card {
+  display: flex;
+  align-items: stretch;
+  background: var(--graphite);
+  border: 1px solid var(--basalt);
+  border-left: 3px solid var(--basalt);
+  padding: 24px 24px;
   text-decoration: none;
   color: inherit;
-  border-radius: var(--r-card);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
   transition: border-color .15s, background .15s;
+  gap: 16px;
+  min-height: 120px;
 }
-.doc-card:hover { background: var(--surface2); border-color: var(--border2); }
-.doc-card.status-draft        { border-left-color: var(--draft); }
-.doc-card.status-en-discusion { border-left-color: #c9a43a; }
-.doc-card.status-en-progreso  { border-left-color: #3b7dd8; }
+.doc-card:hover { background: var(--obsidian); border-color: var(--pewter); }
+.doc-card.status-draft        { border-left-color: var(--steel); }
+.doc-card.status-en-discusion { border-left-color: #c0a030; }
+.doc-card.status-en-progreso  { border-left-color: var(--link-blue); }
 .doc-card.status-en-revision  { border-left-color: #d08030; }
-.doc-card.status-publicado    { border-left-color: var(--accent); }
-.doc-card.status-archivado    { opacity: .4; border-left-color: var(--border2); }
+.doc-card.status-publicado    { border-left-color: var(--signal); }
+.doc-card.status-archivado    { opacity: .4; border-left-color: var(--basalt); }
 
-.doc-title { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 3px; }
-.doc-desc  { font-size: 11px; color: var(--dim); }
-.doc-meta  { font-size: 10px; color: var(--dimmer); margin-top: 6px; font-family: var(--mono); }
+.doc-main { flex: 1; min-width: 0; }
+.doc-title {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--chalk);
+  margin-bottom: 5px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-desc  { font-size: 12px; color: var(--fog); letter-spacing: 0.025em; line-height: 1.5; }
+.doc-meta  { font-size: 10px; color: var(--steel); margin-top: 10px; font-family: 'Red Hat Mono', monospace; }
 
-.doc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.doc-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 8px;
+}
 
+/* ── BADGE ── */
 .badge {
   display: inline-block;
-  padding: 3px 10px;
-  font-size: 10px;
+  padding: 2px 7px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
   border: 1px solid;
+  border-radius: 2px;
   white-space: nowrap;
-  border-radius: var(--r-sm);
+  font-family: 'Red Hat Text', sans-serif;
 }
-.badge-draft        { color: #666;    border-color: var(--draft); }
-.badge-en-discusion { color: #c9a43a; border-color: #c9a43a; }
-.badge-en-progreso  { color: #5a9de8; border-color: #3b7dd8; }
-.badge-en-revision  { color: #d08030; border-color: #d08030; }
-.badge-publicado    { color: var(--accent); border-color: var(--accent); }
-.badge-archivado    { color: #444; border-color: var(--border2); }
+.badge-draft        { color: var(--fog);       border-color: var(--steel); }
+.badge-en-discusion { color: #c0a030;          border-color: #8a7022; }
+.badge-en-progreso  { color: var(--link-blue); border-color: var(--iris); }
+.badge-en-revision  { color: #d08030;          border-color: #8a5a1a; }
+.badge-publicado    { color: var(--signal);    border-color: var(--moss); }
+.badge-archivado    { color: var(--steel);     border-color: var(--basalt); }
 
-.doc-author { font-size: 10px; color: var(--dimmer); font-family: var(--mono); }
+.doc-author { font-size: 10px; color: var(--steel); font-family: 'Red Hat Mono', monospace; }
+.doc-arrow  { font-size: 14px; color: var(--iron); transition: color .15s, transform .15s; }
+.doc-card:hover .doc-arrow { color: var(--fog); transform: translateX(2px); }
 
-.empty { color: var(--dimmer); font-size: 12px; padding: 24px 0; }
+/* ── EMPTY STATE ── */
+.empty {
+  color: var(--steel);
+  font-size: 13px;
+  padding: 48px 0;
+  font-family: 'Red Hat Mono', monospace;
+  border: 1px dashed var(--basalt);
+  border-radius: 6px;
+  text-align: center;
+}
+
+/* ── FOOTER ROW ── */
+.footer-row {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--basalt);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: start;
+}
 
 .legend {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
   font-size: 10px;
-  color: var(--dim);
+  color: var(--fog);
+  letter-spacing: 0.025em;
+  align-items: center;
 }
-.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
 
 .add-hint {
-  margin-top: 24px;
-  padding: 14px 16px;
-  border: 1px dashed var(--border2);
-  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  border: 1px dashed var(--basalt);
+  border-radius: 6px;
   font-size: 11px;
-  color: var(--dimmer);
+  color: var(--steel);
   line-height: 1.8;
+  text-align: right;
+  min-width: 340px;
 }
-.add-hint code { color: var(--accent); background: var(--surface); padding: 1px 6px; border: 1px solid var(--border2); border-radius: 4px; font-family: var(--mono); font-size: 10px; }
+.add-hint code {
+  color: var(--link-blue);
+  background: var(--obsidian);
+  padding: 1px 4px;
+  border: 1px solid var(--basalt);
+  border-radius: 2px;
+  font-family: 'Red Hat Mono', monospace;
+  font-size: 10px;
+}
+
+@media (max-width: 900px) {
+  body { padding: 32px 20px 60px; }
+  .hdr { grid-template-columns: 1fr; }
+  .hdr-meta { text-align: left; }
+  .footer-row { grid-template-columns: 1fr; }
+  .add-hint { min-width: 0; text-align: left; }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="hdr">
-    <h1>Dev Vault</h1>
-    <p>diagramas técnicos · flujos · decisiones de arquitectura</p>
+    <div class="hdr-left">
+      <h1>Dev Vault</h1>
+      <p>diagramas técnicos &middot; flujos &middot; decisiones de arquitectura</p>
+    </div>
+    <div class="hdr-meta" id="doc-count">cargando…</div>
   </div>
 
-  <div class="filters" id="filters">
-    <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">todos</button>
+  <div class="filters-bar">
+    <span class="filters-label">filtrar</span>
+    <div id="filters">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">todos</button>
+    </div>
   </div>
 
   <div id="docs-container"></div>
 
-  <div class="legend">
-    <div class="legend-item"><span class="badge badge-draft">draft</span> borrador inicial</div>
-    <div class="legend-item"><span class="badge badge-en-discusion">en discusión</span> decisiones abiertas</div>
-    <div class="legend-item"><span class="badge badge-en-progreso">en progreso</span> desarrollo activo</div>
-    <div class="legend-item"><span class="badge badge-en-revision">en revisión</span> listo para review</div>
-    <div class="legend-item"><span class="badge badge-publicado">publicado</span> aprobado</div>
-  </div>
-
-  <div class="add-hint">
-    Para agregar un doc: subí el <code>.html</code> al repo, actualizá <code>manifest.json</code> y hacé push a <code>main</code>.
+  <div class="footer-row">
+    <div class="legend">
+      <div class="legend-item"><span class="badge badge-draft">draft</span> borrador</div>
+      <div class="legend-item"><span class="badge badge-en-discusion">en discusión</span> decisiones abiertas</div>
+      <div class="legend-item"><span class="badge badge-en-progreso">en progreso</span> desarrollo activo</div>
+      <div class="legend-item"><span class="badge badge-en-revision">en revisión</span> listo para review</div>
+      <div class="legend-item"><span class="badge badge-publicado">publicado</span> aprobado</div>
+    </div>
+    <div class="add-hint">
+      Agregar doc: subí el <code>.html</code>, actualizá <code>manifest.json</code>, push a <code>main</code>.
+    </div>
   </div>
 
 </div>
 
 <script>
+// ponytail: inline fallback so the page renders when opened as file://
+const FALLBACK_DOCS = [
+  {
+    "file": "callback-batch-architecture.html",
+    "title": "Callback Batch — Architecture",
+    "description": "4 tablas, 2 crons, flujo de datos interactivo",
+    "domain": "Callback",
+    "status": "en-revision",
+    "author": "tobias",
+    "updated": "2026-06-22"
+  },
+  {
+    "file": "callback-lead-flow.html",
+    "title": "Callback — Flujo del Lead",
+    "description": "Orígenes, actores, segmentos de despacho, día del supervisor",
+    "domain": "Callback",
+    "status": "en-discusion",
+    "author": "tobias",
+    "updated": "2026-06-22"
+  }
+];
+
 let currentFilter = 'all';
+let allDocs = [];
 
 fetch('manifest.json')
   .then(r => r.json())
-  .then(docs => {
-    buildFilters(docs);
-    render(docs);
-  });
+  .then(docs => init(docs))
+  .catch(() => init(FALLBACK_DOCS));
+
+function init(docs) {
+  allDocs = docs;
+  buildFilters(docs);
+  render(docs);
+  document.getElementById('doc-count').textContent = `${docs.length} doc${docs.length !== 1 ? 's' : ''}`;
+}
 
 function buildFilters(docs) {
   const domains = [...new Set(docs.map(d => d.domain))];
@@ -199,7 +345,7 @@ function setFilter(filter, btn) {
   currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  fetch('manifest.json').then(r => r.json()).then(render);
+  render(allDocs);
 }
 
 function render(docs) {
@@ -219,18 +365,20 @@ function render(docs) {
   container.innerHTML = Object.entries(byDomain).map(([domain, items]) => `
     <div class="domain-group">
       <div class="domain-label">${domain}</div>
-      ${items.map(doc => `
-        <a class="doc-card status-${doc.status}" href="${doc.file}">
-          <div>
-            <div class="doc-title">${doc.title}</div>
-            <div class="doc-desc">${doc.description}</div>
-            <div class="doc-meta">${doc.updated}</div>
-          </div>
-          <div class="doc-right">
-            <span class="badge badge-${doc.status}">${doc.status.replace('-', ' ')}</span>
-            <span class="doc-author">${doc.author}</span>
-          </div>
-        </a>`).join('')}
+      <div class="cards-grid">
+        ${items.map(doc => `
+          <a class="doc-card status-${doc.status}" href="${doc.file}">
+            <div class="doc-main">
+              <div class="doc-title">${doc.title}</div>
+              <div class="doc-desc">${doc.description}</div>
+              <div class="doc-meta">${doc.updated} &middot; ${doc.author}</div>
+            </div>
+            <div class="doc-aside">
+              <span class="badge badge-${doc.status}">${doc.status.replace(/-/g, ' ')}</span>
+              <span class="doc-arrow">→</span>
+            </div>
+          </a>`).join('')}
+      </div>
     </div>`).join('');
 }
 </script>
