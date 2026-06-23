@@ -4,37 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dev Vault</title>
+<link rel="stylesheet" href="tokens.css">
 <style>
 :root {
-  --bg: #080808;
-  --surface: #0f0f0f;
-  --border: #1a1a1a;
-  --border2: #242424;
-  --text: #c8c8c8;
-  --dim: #4a4a4a;
-  --dimmer: #2a2a2a;
-  --mono: 'SF Mono','Cascadia Code','Consolas','Monaco',monospace;
-
-  --draft:       #4a4a4a;
-  --en-discusion:#8a7022;
-  --en-progreso: #1a5a8a;
-  --en-revision: #8a5a1a;
-  --publicado:   #2d9e5f;
-  --archivado:   #2a2a2a;
+  --draft:       var(--dimmer);
+  --en-discusion:#c9a43a;
+  --en-progreso: #3b7dd8;
+  --en-revision: #d08030;
+  --publicado:   var(--accent);
+  --archivado:   var(--border2);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   background: var(--bg);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px;
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 13px;
   line-height: 1.6;
   padding: 48px 32px 80px;
 }
 
-.wrap { max-width: 860px; margin: 0 auto; }
+.wrap { max-width: 1200px; margin: 0 auto; }
 
 .hdr {
   border-bottom: 1px solid var(--border);
@@ -44,8 +36,8 @@ body {
   align-items: baseline;
   gap: 16px;
 }
-.hdr h1 { font-size: 13px; font-weight: 600; color: #e0e0e0; letter-spacing: .08em; text-transform: uppercase; }
-.hdr p { font-size: 10px; color: var(--dim); }
+.hdr h1 { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: .08em; text-transform: uppercase; }
+.hdr p  { font-size: 11px; color: var(--dim); }
 
 .filters {
   display: flex;
@@ -57,14 +49,15 @@ body {
   background: transparent;
   border: 1px solid var(--border2);
   color: var(--dim);
-  padding: 5px 11px;
-  font-family: var(--mono);
-  font-size: 10px;
+  padding: 6px 16px;
+  font-family: var(--sans);
+  font-size: 11px;
   cursor: pointer;
   letter-spacing: .04em;
+  border-radius: var(--r-btn);
   transition: all .15s;
 }
-.filter-btn:hover, .filter-btn.active { border-color: #5a9de8; color: #7ab3f0; }
+.filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); }
 
 .domain-group { margin-bottom: 28px; }
 .domain-label {
@@ -73,6 +66,7 @@ body {
   letter-spacing: .1em;
   color: var(--dimmer);
   margin-bottom: 8px;
+  font-family: var(--mono);
 }
 
 .doc-card {
@@ -83,46 +77,48 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--border);
-  padding: 14px 16px;
-  margin-bottom: 2px;
+  padding: 14px 20px;
+  margin-bottom: 4px;
   text-decoration: none;
   color: inherit;
+  border-radius: var(--r-card);
   transition: border-color .15s, background .15s;
 }
-.doc-card:hover { background: #111; border-color: var(--border2); }
+.doc-card:hover { background: var(--surface2); border-color: var(--border2); }
 .doc-card.status-draft        { border-left-color: var(--draft); }
-.doc-card.status-en-discusion { border-left-color: #c0a030; }
+.doc-card.status-en-discusion { border-left-color: #c9a43a; }
 .doc-card.status-en-progreso  { border-left-color: #3b7dd8; }
 .doc-card.status-en-revision  { border-left-color: #d08030; }
-.doc-card.status-publicado    { border-left-color: var(--publicado); }
-.doc-card.status-archivado    { opacity: .4; border-left-color: var(--archivado); }
+.doc-card.status-publicado    { border-left-color: var(--accent); }
+.doc-card.status-archivado    { opacity: .4; border-left-color: var(--border2); }
 
-.doc-title { font-weight: 600; font-size: 12px; color: #e0e0e0; margin-bottom: 3px; }
-.doc-desc  { font-size: 10px; color: var(--dim); }
-.doc-meta  { font-size: 9px; color: var(--dimmer); margin-top: 6px; }
+.doc-title { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.doc-desc  { font-size: 11px; color: var(--dim); }
+.doc-meta  { font-size: 10px; color: var(--dimmer); margin-top: 6px; font-family: var(--mono); }
 
 .doc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 
 .badge {
   display: inline-block;
-  padding: 2px 7px;
-  font-size: 9px;
+  padding: 3px 10px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
   border: 1px solid;
   white-space: nowrap;
+  border-radius: var(--r-sm);
 }
 .badge-draft        { color: #666;    border-color: var(--draft); }
-.badge-en-discusion { color: #c0a030; border-color: #8a7022; }
-.badge-en-progreso  { color: #5a9de8; border-color: #1a5a8a; }
-.badge-en-revision  { color: #d08030; border-color: #8a5a1a; }
-.badge-publicado    { color: #4dbf7f; border-color: var(--publicado); }
-.badge-archivado    { color: #444;    border-color: var(--archivado); }
+.badge-en-discusion { color: #c9a43a; border-color: #c9a43a; }
+.badge-en-progreso  { color: #5a9de8; border-color: #3b7dd8; }
+.badge-en-revision  { color: #d08030; border-color: #d08030; }
+.badge-publicado    { color: var(--accent); border-color: var(--accent); }
+.badge-archivado    { color: #444; border-color: var(--border2); }
 
-.doc-author { font-size: 9px; color: var(--dimmer); }
+.doc-author { font-size: 10px; color: var(--dimmer); font-family: var(--mono); }
 
-.empty { color: var(--dimmer); font-size: 11px; padding: 24px 0; }
+.empty { color: var(--dimmer); font-size: 12px; padding: 24px 0; }
 
 .legend {
   margin-top: 40px;
@@ -131,7 +127,7 @@ body {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--dim);
 }
 .legend-item { display: flex; align-items: center; gap: 6px; }
@@ -140,11 +136,12 @@ body {
   margin-top: 24px;
   padding: 14px 16px;
   border: 1px dashed var(--border2);
-  font-size: 10px;
+  border-radius: var(--r-sm);
+  font-size: 11px;
   color: var(--dimmer);
   line-height: 1.8;
 }
-.add-hint code { color: #5a9de8; background: #0c0c0c; padding: 1px 4px; border: 1px solid var(--border2); }
+.add-hint code { color: var(--accent); background: var(--surface); padding: 1px 6px; border: 1px solid var(--border2); border-radius: 4px; font-family: var(--mono); font-size: 10px; }
 </style>
 </head>
 <body>
